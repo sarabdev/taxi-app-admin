@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import AdminLayout from "../layout/AdminLayout";
@@ -21,6 +21,8 @@ import Dashboard from "../pages/admin/Dashboard";
 export default function AppRouter() {
     return (
         <Routes>
+            <Route path="/" element={<Navigate to="/admin" replace />} />
+
             <Route path="/login" element={<Login />} />
 
             <Route

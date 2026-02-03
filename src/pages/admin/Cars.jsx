@@ -3,16 +3,48 @@ import { createCar, deleteCar, fetchCars, updateCar } from "../../api/cars";
 
 const emptyCar = {
     name: "",
-    type: "sedan",
+    type: "salon_car",
     image: "",
     capacity: { passengers: null, luggage: null },
-    pricePerMile: null,
     basePrice: null,
+    airportRates: {},
     features: [],
     description: "",
     discounts: [],
 };
 
+const UK_AIRPORTS = [
+    {
+        name: "London Heathrow Airport",
+        code: "LHR",
+        city: "London",
+        placeId: "ChIJ6W3FzTRydkgRZ0H2Q1VT548",
+    },
+    {
+        name: "London Gatwick Airport",
+        code: "LGW",
+        city: "London",
+        placeId: "ChIJGzkffd7vdUgR_3OJAb-k3Vk",
+    },
+    {
+        name: "Manchester Airport",
+        code: "MAN",
+        city: "Manchester",
+        placeId: "ChIJxZPY38BSekgR4KXk5UeCC4s",
+    },
+    {
+        name: "Birmingham Airport",
+        code: "BHX",
+        city: "Birmingham",
+        placeId: "ChIJ48lW_96wcEgRu1WTVyOrfw0",
+    },
+    {
+        name: "Edinburgh Airport",
+        code: "EDI",
+        city: "Edinburgh",
+        placeId: "ChIJfQHjkw7Fh0gRm9WxkiUKUxk",
+    },
+];
 function normalizeNumber(v, fallback = 0) {
     const n = Number(v);
     return Number.isFinite(n) ? n : fallback;
@@ -37,22 +69,40 @@ export default function Cars() {
 
     const onCreate = () => {
         setMode("create");
-        setForm(emptyCar);
-        setError("");
-        setOpen(true);
-    };
-
-    const onEdit = (car) => {
-        setMode("edit");
         setForm({
-            ...car,
-            capacity: car.capacity || { passengers: 4, luggage: 2 },
-            features: car.features || [],
-            discounts: car.discounts || [],
+            ...emptyCar,
+            airportRates: UK_AIRPORTS.reduce((acc, a) => {
+                acc[a.placeId] = { pricePerMile: "" };
+                return acc;
+            }, {}),
         });
         setError("");
         setOpen(true);
     };
+
+
+    const onEdit = (car) => {
+        setMode("edit");
+
+        const normalizedRates = UK_AIRPORTS.reduce((acc, a) => {
+            acc[a.placeId] = {
+                pricePerMile: car.airportRates?.[a.placeId]?.pricePerMile ?? "",
+            };
+            return acc;
+        }, {});
+
+        setForm({
+            ...car,
+            airportRates: normalizedRates,
+            capacity: car.capacity || { passengers: 4, luggage: 2 },
+            features: car.features || [],
+            discounts: car.discounts || [],
+        });
+
+        setError("");
+        setOpen(true);
+    };
+
 
     const addFeature = () => {
         const f = featureInput.trim();
@@ -94,12 +144,18 @@ export default function Cars() {
             const payload = {
                 ...form,
                 basePrice: normalizeNumber(form.basePrice),
-                pricePerMile: normalizeNumber(form.pricePerMile),
+                airportRates: Object.fromEntries(
+                    Object.entries(form.airportRates || {}).map(([k, v]) => [
+                        k,
+                        { pricePerMile: normalizeNumber(v.pricePerMile) },
+                    ])
+                ),
                 capacity: {
                     passengers: normalizeNumber(form.capacity?.passengers, 0),
                     luggage: normalizeNumber(form.capacity?.luggage, 0),
                 },
             };
+
 
             if (mode === "create") await createCar(payload);
             else await updateCar(form._id, payload);
@@ -132,39 +188,67 @@ export default function Cars() {
                         <tr className="border-b text-left">
                             <th className="py-2">Name</th>
                             <th>Type</th>
-                            <th>Base</th>
-                            <th>Per Mile</th>
+                            <th>Base Price</th>
+                            <th>Per Mile Pricing</th>
                             <th>Return Discount</th>
                             <th />
                         </tr>
                     </thead>
+
                     <tbody>
                         {cars.map((c) => {
-                            const rd = (c.discounts || []).find((d) => d.condition === "RETURN_TRIP" && d.isActive);
+                            const rd = (c.discounts || []).find(
+                                (d) => d.condition === "RETURN_TRIP" && d.isActive
+                            );
+
                             const rdLabel = rd
                                 ? rd.type === "PERCENTAGE"
                                     ? `${rd.value}%`
-                                    : `$${rd.value}`
+                                    : `£${rd.value}`
                                 : "—";
+
+                            // derive airport pricing range
+                            const rates = Object.values(c.airportRates || {})
+                                .map((r) => Number(r.pricePerMile))
+                                .filter(Boolean);
+
+                            const rateLabel =
+                                rates.length > 0
+                                    ? `£${Math.min(...rates).toFixed(2)} – £${Math.max(...rates).toFixed(2)}`
+                                    : "—";
 
                             return (
                                 <tr key={c._id} className="border-b last:border-0">
                                     <td className="py-2">{c.name}</td>
-                                    <td>{c.type}</td>
-                                    <td>${Number(c.basePrice || 0).toFixed(2)}</td>
-                                    <td>${Number(c.pricePerMile || 0).toFixed(2)}</td>
+                                    <td className="capitalize">{c.type.replaceAll("_", " ")}</td>
+                                    <td>£{Number(c.basePrice || 0).toFixed(2)}</td>
+                                    <td>
+                                        <span className="text-xs text-gray-700">
+                                            {rateLabel}
+                                        </span>
+                                        <div className="text-[10px] text-gray-400">
+                                            airport based
+                                        </div>
+                                    </td>
                                     <td>{rdLabel}</td>
                                     <td className="text-right space-x-3">
-                                        <button className="text-primary-600 underline" onClick={() => onEdit(c)}>
+                                        <button
+                                            className="text-primary-600 underline"
+                                            onClick={() => onEdit(c)}
+                                        >
                                             Edit
                                         </button>
-                                        <button className="text-red-600 underline" onClick={() => handleDelete(c._id)}>
+                                        <button
+                                            className="text-red-600 underline"
+                                            onClick={() => handleDelete(c._id)}
+                                        >
                                             Delete
                                         </button>
                                     </td>
                                 </tr>
                             );
                         })}
+
                         {cars.length === 0 && (
                             <tr>
                                 <td className="py-6 text-gray-500" colSpan={6}>
@@ -174,6 +258,7 @@ export default function Cars() {
                         )}
                     </tbody>
                 </table>
+
             </div>
 
             {/* Modal */}
@@ -211,11 +296,12 @@ export default function Cars() {
                                         value={form.type}
                                         onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
                                     >
-                                        <option value="sedan">sedan</option>
-                                        <option value="executive">executive</option>
-                                        <option value="suv">suv</option>
-                                        <option value="luxury">luxury</option>
-                                        <option value="van">van</option>
+                                        <option value="salon_car">Salon Car</option>
+                                        <option value="executive_car">Executive Car</option>
+                                        <option value="estate_car">Estate Car</option>
+                                        <option value="people_carrier">People Carrier</option>
+                                        <option value="executive_people_carrier">Executive People Carrier</option>
+                                        <option value="minibus_8_seater">8 Seater Minibus</option>
                                     </select>
 
                                     {/* <input
@@ -225,25 +311,61 @@ export default function Cars() {
                                     onChange={(e) => setForm((p) => ({ ...p, image: e.target.value }))}
                                 /> */}
 
-                                    <input
-                                        className="input-field"
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="Base Price"
-                                        value={form.basePrice}
-                                        onChange={(e) => setForm((p) => ({ ...p, basePrice: e.target.value }))}
-                                        required
-                                    />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Base Price
+                                        </label>
+                                        <input
+                                            className="input-field max-w-[200px]"
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="£"
+                                            value={form.basePrice}
+                                            onChange={(e) => setForm((p) => ({ ...p, basePrice: e.target.value }))}
+                                            required
+                                        />
+                                    </div>
 
-                                    <input
-                                        className="input-field"
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="Price Per Mile"
-                                        value={form.pricePerMile}
-                                        onChange={(e) => setForm((p) => ({ ...p, pricePerMile: e.target.value }))}
-                                        required
-                                    />
+
+                                    {/* Airport-wise Pricing */}
+                                    <div className="border rounded-xl p-4 space-y-4 md:col-span-2">
+                                        <div className="font-semibold">Price Per Mile (by Airport)</div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {UK_AIRPORTS.map((airport) => (
+                                                <div key={airport.placeId}>
+                                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                        {airport.name} ({airport.code})
+                                                    </label>
+
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        className="input-field"
+                                                        placeholder="£ per mile"
+                                                        value={form.airportRates?.[airport.placeId]?.pricePerMile ?? ""}
+                                                        onChange={(e) =>
+                                                            setForm((p) => ({
+                                                                ...p,
+                                                                airportRates: {
+                                                                    ...(p.airportRates || {}),
+                                                                    [airport.placeId]: {
+                                                                        pricePerMile: e.target.value,
+                                                                    },
+                                                                },
+                                                            }))
+                                                        }
+                                                        required
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <p className="text-xs text-gray-500">
+                                            Pricing is applied based on the pickup airport.
+                                        </p>
+                                    </div>
+
 
                                     <input
                                         className="input-field"
