@@ -13,38 +13,31 @@ const emptyCar = {
     discounts: [],
 };
 
-const UK_AIRPORTS = [
-    {
-        name: "London Heathrow Airport",
-        code: "LHR",
-        city: "London",
-        placeId: "ChIJ6W3FzTRydkgRZ0H2Q1VT548",
-    },
-    {
-        name: "London Gatwick Airport",
-        code: "LGW",
-        city: "London",
-        placeId: "ChIJGzkffd7vdUgR_3OJAb-k3Vk",
-    },
-    {
-        name: "Manchester Airport",
-        code: "MAN",
-        city: "Manchester",
-        placeId: "ChIJxZPY38BSekgR4KXk5UeCC4s",
-    },
-    {
-        name: "Birmingham Airport",
-        code: "BHX",
-        city: "Birmingham",
-        placeId: "ChIJ48lW_96wcEgRu1WTVyOrfw0",
-    },
-    {
-        name: "Edinburgh Airport",
-        code: "EDI",
-        city: "Edinburgh",
-        placeId: "ChIJfQHjkw7Fh0gRm9WxkiUKUxk",
-    },
+const UK_CITIES = [
+    { name: "London", code: "LON", placeId: "ChIJdd4hrwug2EcRmSrV3Vo6llI" },
+    { name: "Manchester", code: "MAN", placeId: "ChIJ2_UmUkxNekgRqmv-BDgUvtk" },
+    { name: "Birmingham", code: "BHM", placeId: "ChIJc3FtQmuUcEgRmHnurvD-gco" },
+    { name: "Edinburgh", code: "EDI", placeId: "ChIJIyaYpQC4h0gRJxfnfHsU8mQ" },
+    { name: "Glasgow", code: "GLA", placeId: "ChIJ685WIFYViEgRHlHvBbiD5nE" },
+    { name: "Leeds", code: "LDS", placeId: "ChIJ-3bkCCmxeUgRBPgPm7BH15o" },
+    { name: "Liverpool", code: "LPL", placeId: "ChIJt2BnBiMoek gRhFzMELZVMqE" },
+    { name: "Bristol", code: "BST", placeId: "ChIJYdizgWuFbkgRQMOb9-eFpMc" },
+    { name: "Sheffield", code: "SHF", placeId: "ChIJ-RQpgzOFe0gRJxk_YhzmBpk" },
+    { name: "Newcastle", code: "NCL", placeId: "ChIJyUNFDmH5fkgRTAZQMN3ELOI" },
+    { name: "Nottingham", code: "NGM", placeId: "ChIJuYOOULgDeUgRiEO9_Phu6xg" },
+    { name: "Leicester", code: "LCE", placeId: "ChIJwWuJH4SaeUgRJoJyGksMaOQ" },
+    { name: "Coventry", code: "CVT", placeId: "ChIJu1PkfYAEd0gRdstc29cUoKY" },
+    { name: "Bradford", code: "BFD", placeId: "ChIJz4lMEMtxeUgRe3nSXXq8Daw" },
+    { name: "Cardiff", code: "CDF", placeId: "ChIJ9VgJdb-fbkgRDplI5hnBMSo" },
+    { name: "Belfast", code: "BFS", placeId: "ChIJG6kSYNcNYEgRZ00VxYzXmR4" },
+    { name: "Southampton", code: "SOU", placeId: "ChIJd3TmZhpQdEgRfMhF0KuxIj8" },
+    { name: "Portsmouth", code: "POR", placeId: "ChIJ1RP4COJP1EIRFDplI5hnBMs" },
+    { name: "Oxford", code: "OXF", placeId: "ChIJrx_KCcZjdkgRPQ0WS1jg8iM" },
+    { name: "Cambridge", code: "CAM", placeId: "ChIJLQEq84FD2EcRIT1eo-Ego2M" },
 ];
+
+const DEFAULT_PRICE_PER_HOUR = 3;
+
 function normalizeNumber(v, fallback = 0) {
     const n = Number(v);
     return Number.isFinite(n) ? n : fallback;
@@ -71,8 +64,8 @@ export default function Cars() {
         setMode("create");
         setForm({
             ...emptyCar,
-            airportRates: UK_AIRPORTS.reduce((acc, a) => {
-                acc[a.placeId] = { pricePerMile: "" };
+            airportRates: UK_CITIES.reduce((acc, city) => {
+                acc[city.code] = { pricePerMile: DEFAULT_PRICE_PER_HOUR };
                 return acc;
             }, {}),
         });
@@ -80,13 +73,14 @@ export default function Cars() {
         setOpen(true);
     };
 
-
     const onEdit = (car) => {
         setMode("edit");
 
-        const normalizedRates = UK_AIRPORTS.reduce((acc, a) => {
-            acc[a.placeId] = {
-                pricePerMile: car.airportRates?.[a.placeId]?.pricePerMile ?? "",
+        const normalizedRates = UK_CITIES.reduce((acc, city) => {
+            acc[city.code] = {
+                pricePerMile:
+                    car.airportRates?.[city.code]?.pricePerMile ??
+                    DEFAULT_PRICE_PER_HOUR,
             };
             return acc;
         }, {});
@@ -103,7 +97,6 @@ export default function Cars() {
         setOpen(true);
     };
 
-
     const addFeature = () => {
         const f = featureInput.trim();
         if (!f) return;
@@ -118,7 +111,6 @@ export default function Cars() {
         }));
     };
 
-    // Discounts: Only manage RETURN_TRIP discount (best practice v1)
     const setReturnTripDiscount = (patch) => {
         setForm((p) => {
             const existing = (p.discounts || []).find((d) => d.condition === "RETURN_TRIP");
@@ -156,7 +148,6 @@ export default function Cars() {
                 },
             };
 
-
             if (mode === "create") await createCar(payload);
             else await updateCar(form._id, payload);
 
@@ -189,7 +180,7 @@ export default function Cars() {
                             <th className="py-2">Name</th>
                             <th>Type</th>
                             <th>Base Price</th>
-                            <th>Per Mile Pricing</th>
+                            <th>Per Hour Pricing</th>
                             <th>Return Discount</th>
                             <th />
                         </tr>
@@ -207,7 +198,7 @@ export default function Cars() {
                                     : `£${rd.value}`
                                 : "—";
 
-                            // derive airport pricing range
+                            // derive city pricing range
                             const rates = Object.values(c.airportRates || {})
                                 .map((r) => Number(r.pricePerMile))
                                 .filter(Boolean);
@@ -223,12 +214,8 @@ export default function Cars() {
                                     <td className="capitalize">{c.type.replaceAll("_", " ")}</td>
                                     <td>£{Number(c.basePrice || 0).toFixed(2)}</td>
                                     <td>
-                                        <span className="text-xs text-gray-700">
-                                            {rateLabel}
-                                        </span>
-                                        <div className="text-[10px] text-gray-400">
-                                            airport based
-                                        </div>
+                                        <span className="text-xs text-gray-700">{rateLabel}</span>
+                                        <div className="text-[10px] text-gray-400">city based</div>
                                     </td>
                                     <td>{rdLabel}</td>
                                     <td className="text-right space-x-3">
@@ -258,14 +245,13 @@ export default function Cars() {
                         )}
                     </tbody>
                 </table>
-
             </div>
 
             {/* Modal */}
             {open && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
                     <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center justify-between mb-4 p-6 pb-0">
                             <h2 className="text-lg font-semibold">
                                 {mode === "create" ? "Create Car" : "Edit Car"}
                             </h2>
@@ -274,7 +260,6 @@ export default function Cars() {
                             </button>
                         </div>
                         <div className="overflow-y-auto p-6">
-
                             {error && (
                                 <div className="mb-4 text-red-600 bg-red-50 p-2 rounded text-sm">
                                     {error}
@@ -304,13 +289,6 @@ export default function Cars() {
                                         <option value="minibus_8_seater">8 Seater Minibus</option>
                                     </select>
 
-                                    {/* <input
-                                    className="input-field md:col-span-2"
-                                    placeholder="Image URL"
-                                    value={form.image || ""}
-                                    onChange={(e) => setForm((p) => ({ ...p, image: e.target.value }))}
-                                /> */}
-
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Base Price
@@ -321,35 +299,36 @@ export default function Cars() {
                                             step="0.01"
                                             placeholder="£"
                                             value={form.basePrice}
-                                            onChange={(e) => setForm((p) => ({ ...p, basePrice: e.target.value }))}
+                                            onChange={(e) =>
+                                                setForm((p) => ({ ...p, basePrice: e.target.value }))
+                                            }
                                             required
                                         />
                                     </div>
 
-
-                                    {/* Airport-wise Pricing */}
+                                    {/* City-wise Pricing */}
                                     <div className="border rounded-xl p-4 space-y-4 md:col-span-2">
-                                        <div className="font-semibold">Price Per Mile (by Airport)</div>
+                                        <div className="font-semibold">Price Per Hour (by City)</div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {UK_AIRPORTS.map((airport) => (
-                                                <div key={airport.placeId}>
+                                            {UK_CITIES.map((city) => (
+                                                <div key={city.placeId}>
                                                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                        {airport.name} ({airport.code})
+                                                        {city.name} ({city.code})
                                                     </label>
 
                                                     <input
                                                         type="number"
                                                         step="0.01"
                                                         className="input-field"
-                                                        placeholder="£ per mile"
-                                                        value={form.airportRates?.[airport.placeId]?.pricePerMile ?? ""}
+                                                        placeholder="£ per hour"
+                                                        value={form.airportRates?.[city.code]?.pricePerMile ?? ""}
                                                         onChange={(e) =>
                                                             setForm((p) => ({
                                                                 ...p,
                                                                 airportRates: {
                                                                     ...(p.airportRates || {}),
-                                                                    [airport.placeId]: {
+                                                                    [city.code]: {
                                                                         pricePerMile: e.target.value,
                                                                     },
                                                                 },
@@ -362,10 +341,9 @@ export default function Cars() {
                                         </div>
 
                                         <p className="text-xs text-gray-500">
-                                            Pricing is applied based on the pickup airport.
+                                            Pricing is applied based on the pickup city.
                                         </p>
                                     </div>
-
 
                                     <input
                                         className="input-field"
@@ -398,7 +376,9 @@ export default function Cars() {
                                     className="input-field min-h-[100px]"
                                     placeholder="Description"
                                     value={form.description || ""}
-                                    onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                                    onChange={(e) =>
+                                        setForm((p) => ({ ...p, description: e.target.value }))
+                                    }
                                 />
 
                                 {/* Features */}
@@ -421,7 +401,10 @@ export default function Cars() {
 
                                     <div className="mt-3 flex flex-wrap gap-2">
                                         {(form.features || []).map((f, idx) => (
-                                            <span key={`${f}-${idx}`} className="bg-gray-100 px-3 py-1 rounded-full text-xs">
+                                            <span
+                                                key={`${f}-${idx}`}
+                                                className="bg-gray-100 px-3 py-1 rounded-full text-xs"
+                                            >
                                                 {f}{" "}
                                                 <button
                                                     type="button"
@@ -442,10 +425,13 @@ export default function Cars() {
                                         <select
                                             className="input-field"
                                             value={
-                                                (form.discounts || []).find((d) => d.condition === "RETURN_TRIP")?.type ||
-                                                "PERCENTAGE"
+                                                (form.discounts || []).find(
+                                                    (d) => d.condition === "RETURN_TRIP"
+                                                )?.type || "PERCENTAGE"
                                             }
-                                            onChange={(e) => setReturnTripDiscount({ type: e.target.value })}
+                                            onChange={(e) =>
+                                                setReturnTripDiscount({ type: e.target.value })
+                                            }
                                         >
                                             <option value="PERCENTAGE">Percentage</option>
                                             <option value="FIXED">Fixed</option>
@@ -456,9 +442,13 @@ export default function Cars() {
                                             type="number"
                                             step="0.01"
                                             value={
-                                                (form.discounts || []).find((d) => d.condition === "RETURN_TRIP")?.value ?? 10
+                                                (form.discounts || []).find(
+                                                    (d) => d.condition === "RETURN_TRIP"
+                                                )?.value ?? 10
                                             }
-                                            onChange={(e) => setReturnTripDiscount({ value: Number(e.target.value) })}
+                                            onChange={(e) =>
+                                                setReturnTripDiscount({ value: Number(e.target.value) })
+                                            }
                                             placeholder="Value"
                                         />
 
@@ -466,10 +456,13 @@ export default function Cars() {
                                             <input
                                                 type="checkbox"
                                                 checked={
-                                                    (form.discounts || []).find((d) => d.condition === "RETURN_TRIP")?.isActive ??
-                                                    true
+                                                    (form.discounts || []).find(
+                                                        (d) => d.condition === "RETURN_TRIP"
+                                                    )?.isActive ?? true
                                                 }
-                                                onChange={(e) => setReturnTripDiscount({ isActive: e.target.checked })}
+                                                onChange={(e) =>
+                                                    setReturnTripDiscount({ isActive: e.target.checked })
+                                                }
                                             />
                                             Active
                                         </label>
@@ -481,7 +474,11 @@ export default function Cars() {
                                 </div>
 
                                 <div className="flex justify-end gap-3">
-                                    <button type="button" className="btn-secondary" onClick={() => setOpen(false)}>
+                                    <button
+                                        type="button"
+                                        className="btn-secondary"
+                                        onClick={() => setOpen(false)}
+                                    >
                                         Cancel
                                     </button>
                                     <button className="btn-primary" type="submit">

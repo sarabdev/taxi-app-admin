@@ -7,10 +7,15 @@ import {
     deleteDriver,
 } from "../../api/drivers";
 
+import { fetchCars } from "../../api/cars";
+
 export default function Drivers() {
     const [drivers, setDrivers] = useState([]);
+    const [cars, setCars] = useState([]);
+
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
+
     const [error, setError] = useState("");
     const [credentials, setCredentials] = useState(null);
 
@@ -20,19 +25,34 @@ export default function Drivers() {
         name: "",
         email: "",
         phone: "",
+        city: "",
+        homeAddress: "",
+        assignedCarId: "",
         licenseNumber: "",
+        licenseDocument: null,
     });
 
     const [editForm, setEditForm] = useState({
         name: "",
         phone: "",
+        city: "",
+        homeAddress: "",
+        assignedCarId: "",
         licenseNumber: "",
+        licenseDocument: null,
     });
 
     async function loadDrivers() {
         setLoading(true);
-        const data = await fetchDrivers();
-        setDrivers(data);
+
+        const [driversData, carsData] = await Promise.all([
+            fetchDrivers(),
+            fetchCars(),
+        ]);
+
+        setDrivers(driversData);
+        setCars(carsData);
+
         setLoading(false);
     }
 
@@ -44,14 +64,34 @@ export default function Drivers() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         setError("");
         setCredentials(null);
 
         try {
-            const res = await createDriver(form);
+            const payload = new FormData();
+
+            Object.entries(form).forEach(([key, value]) => {
+                if (value !== null && value !== undefined) {
+                    payload.append(key, value);
+                }
+            });
+
+            const res = await createDriver(payload);
+
             setCredentials(res.credentials);
-            setForm({ name: "", email: "", phone: "", licenseNumber: "" });
-            //setShowForm(false);
+
+            setForm({
+                name: "",
+                email: "",
+                phone: "",
+                city: "",
+                homeAddress: "",
+                assignedCarId: "",
+                licenseNumber: "",
+                licenseDocument: null,
+            });
+
             await loadDrivers();
         } catch (e) {
             setError(e.message);
@@ -62,16 +102,31 @@ export default function Drivers() {
 
     const startEdit = (driver) => {
         setEditingDriverId(driver._id);
+
         setEditForm({
-            name: driver.name,
+            name: driver.name || "",
             phone: driver.phone || "",
+            city: driver.city || "",
+            homeAddress: driver.homeAddress || "",
+            assignedCarId: driver.assignedCarId?._id || "",
             licenseNumber: driver.licenseNumber || "",
+            licenseDocument: null,
         });
     };
 
     const saveEdit = async (id) => {
-        await updateDriver(id, editForm);
+        const payload = new FormData();
+
+        Object.entries(editForm).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                payload.append(key, value);
+            }
+        });
+
+        await updateDriver(id, payload);
+
         setEditingDriverId(null);
+
         await loadDrivers();
     };
 
@@ -85,8 +140,12 @@ export default function Drivers() {
     /* ================= DELETE ================= */
 
     const removeDriver = async (driver) => {
-        if (!confirm(`Delete driver "${driver.name}" permanently?`)) return;
+        if (!confirm(`Delete driver "${driver.name}" permanently?`)) {
+            return;
+        }
+
         await deleteDriver(driver._id);
+
         await loadDrivers();
     };
 
@@ -94,7 +153,10 @@ export default function Drivers() {
         <div className="space-y-6">
             {/* Header */}
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">Drivers</h1>
+                <h1 className="text-2xl font-bold">
+                    Drivers
+                </h1>
+
                 <button
                     className="btn-primary"
                     onClick={() => setShowForm((v) => !v)}
@@ -103,10 +165,12 @@ export default function Drivers() {
                 </button>
             </div>
 
-            {/* Create Driver Form */}
+            {/* Create Driver */}
             {showForm && (
                 <div className="card">
-                    <h2 className="font-semibold mb-4">Create Driver</h2>
+                    <h2 className="font-semibold mb-4">
+                        Create Driver
+                    </h2>
 
                     {error && (
                         <div className="mb-4 text-red-600 bg-red-50 p-2 rounded text-sm">
@@ -117,11 +181,13 @@ export default function Drivers() {
                     {credentials && (
                         <div className="mb-4 bg-yellow-50 border border-yellow-300 p-4 rounded">
                             <p className="font-semibold text-sm mb-2">
-                                ⚠️ Save these credentials now (shown once)
+                                ⚠ Save these credentials now
                             </p>
+
                             <p className="text-sm">
                                 Email: <b>{credentials.email}</b>
                             </p>
+
                             <p className="text-sm">
                                 Password: <b>{credentials.password}</b>
                             </p>
@@ -136,7 +202,12 @@ export default function Drivers() {
                             className="input-field"
                             placeholder="Driver Name"
                             value={form.name}
-                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    name: e.target.value,
+                                })
+                            }
                             required
                         />
 
@@ -145,7 +216,12 @@ export default function Drivers() {
                             type="email"
                             placeholder="Email"
                             value={form.email}
-                            onChange={(e) => setForm({ ...form, email: e.target.value })}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    email: e.target.value,
+                                })
+                            }
                             required
                         />
 
@@ -153,15 +229,86 @@ export default function Drivers() {
                             className="input-field"
                             placeholder="Phone"
                             value={form.phone}
-                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    phone: e.target.value,
+                                })
+                            }
                         />
+
+                        <input
+                            className="input-field"
+                            placeholder="City"
+                            value={form.city}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    city: e.target.value,
+                                })
+                            }
+                            required
+                        />
+
+                        <input
+                            className="input-field md:col-span-2"
+                            placeholder="Home Address"
+                            value={form.homeAddress}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    homeAddress: e.target.value,
+                                })
+                            }
+                            required
+                        />
+
+                        <select
+                            className="input-field"
+                            value={form.assignedCarId}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    assignedCarId: e.target.value,
+                                })
+                            }
+                        >
+                            <option value="">
+                                Select Car
+                            </option>
+
+                            {cars.map((car) => (
+                                <option
+                                    key={car._id}
+                                    value={car._id}
+                                >
+                                    {car.name}
+                                </option>
+                            ))}
+                        </select>
 
                         <input
                             className="input-field"
                             placeholder="License Number"
                             value={form.licenseNumber}
                             onChange={(e) =>
-                                setForm({ ...form, licenseNumber: e.target.value })
+                                setForm({
+                                    ...form,
+                                    licenseNumber: e.target.value,
+                                })
+                            }
+                        />
+
+                        <input
+                            type="file"
+                            className="input-field md:col-span-2"
+                            accept=".pdf,image/*"
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    licenseDocument:
+                                        e.target.files[0],
+                                })
                             }
                         />
 
@@ -173,72 +320,79 @@ export default function Drivers() {
             )}
 
             {/* Driver List */}
-            <div className="card">
-                <h2 className="font-semibold mb-4">Driver List</h2>
+            <div className="card overflow-x-auto">
+                <h2 className="font-semibold mb-4">
+                    Driver List
+                </h2>
 
                 {loading ? (
                     <div>Loading...</div>
                 ) : drivers.length === 0 ? (
-                    <div className="text-gray-500">No drivers found.</div>
+                    <div className="text-gray-500">
+                        No drivers found.
+                    </div>
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm min-w-[1200px]">
                         <thead>
                             <tr className="border-b text-left">
                                 <th className="py-2">Name</th>
                                 <th>Email</th>
                                 <th>Phone</th>
+                                <th>City</th>
+                                <th>Car</th>
                                 <th>License</th>
+                                <th>Document</th>
                                 <th>Status</th>
-                                <th className="text-right">Actions</th>
+                                <th className="text-right">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
+
                         <tbody>
                             {drivers.map((d) => (
-                                <tr key={d._id} className="border-b last:border-0">
+                                <tr
+                                    key={d._id}
+                                    className="border-b last:border-0"
+                                >
                                     <td className="py-2">
-                                        {editingDriverId === d._id ? (
-                                            <input
-                                                className="input-field"
-                                                value={editForm.name}
-                                                onChange={(e) =>
-                                                    setEditForm({ ...editForm, name: e.target.value })
-                                                }
-                                            />
-                                        ) : (
-                                            d.name
-                                        )}
-                                    </td>
-
-                                    <td>{d.userId?.email}</td>
-
-                                    <td>
-                                        {editingDriverId === d._id ? (
-                                            <input
-                                                className="input-field"
-                                                value={editForm.phone}
-                                                onChange={(e) =>
-                                                    setEditForm({ ...editForm, phone: e.target.value })
-                                                }
-                                            />
-                                        ) : (
-                                            d.phone || "—"
-                                        )}
+                                        {d.name}
                                     </td>
 
                                     <td>
-                                        {editingDriverId === d._id ? (
-                                            <input
-                                                className="input-field"
-                                                value={editForm.licenseNumber}
-                                                onChange={(e) =>
-                                                    setEditForm({
-                                                        ...editForm,
-                                                        licenseNumber: e.target.value,
-                                                    })
-                                                }
-                                            />
+                                        {d.userId?.email}
+                                    </td>
+
+                                    <td>
+                                        {d.phone || "—"}
+                                    </td>
+
+                                    <td>
+                                        {d.city || "—"}
+                                    </td>
+
+                                    <td>
+                                        {d.assignedCarId?.name ||
+                                            "—"}
+                                    </td>
+
+                                    <td>
+                                        {d.licenseNumber ||
+                                            "—"}
+                                    </td>
+
+                                    <td>
+                                        {d.licenseDocument ? (
+                                            <a
+                                                href={`${import.meta.env.VITE_API_BASE}${d.licenseDocument}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-blue-600 underline"
+                                            >
+                                                View
+                                            </a>
                                         ) : (
-                                            d.licenseNumber || "—"
+                                            "—"
                                         )}
                                     </td>
 
@@ -249,44 +403,34 @@ export default function Drivers() {
                                                     ? "text-green-600"
                                                     : "text-red-600"
                                             }
-                                            onClick={() => toggleStatus(d)}
+                                            onClick={() =>
+                                                toggleStatus(d)
+                                            }
                                         >
-                                            {d.isActive ? "Active" : "Inactive"}
+                                            {d.isActive
+                                                ? "Active"
+                                                : "Inactive"}
                                         </button>
                                     </td>
 
                                     <td className="text-right space-x-2">
-                                        {editingDriverId === d._id ? (
-                                            <>
-                                                <button
-                                                    className="text-blue-600"
-                                                    onClick={() => saveEdit(d._id)}
-                                                >
-                                                    Save
-                                                </button>
-                                                <button
-                                                    className="text-gray-500"
-                                                    onClick={() => setEditingDriverId(null)}
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <button
-                                                    className="text-blue-600"
-                                                    onClick={() => startEdit(d)}
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    className="text-red-600"
-                                                    onClick={() => removeDriver(d)}
-                                                >
-                                                    Delete
-                                                </button>
-                                            </>
-                                        )}
+                                        <button
+                                            className="text-blue-600"
+                                            onClick={() =>
+                                                startEdit(d)
+                                            }
+                                        >
+                                            Edit
+                                        </button>
+
+                                        <button
+                                            className="text-red-600"
+                                            onClick={() =>
+                                                removeDriver(d)
+                                            }
+                                        >
+                                            Delete
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

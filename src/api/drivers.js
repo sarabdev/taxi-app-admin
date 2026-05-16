@@ -13,7 +13,7 @@ export function fetchDrivers() {
 export function createDriver(payload) {
   return http("/api/drivers", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: payload,
   });
 }
 
@@ -23,7 +23,7 @@ export function createDriver(payload) {
 export function updateDriver(driverId, payload) {
   return http(`/api/drivers/${driverId}`, {
     method: "PUT",
-    body: JSON.stringify(payload),
+    body: payload,
   });
 }
 
@@ -38,7 +38,7 @@ export function updateDriverStatus(driverId, isActive) {
 }
 
 /**
- * Delete driver (hard delete)
+ * Delete driver
  */
 export function deleteDriver(driverId) {
   return http(`/api/drivers/${driverId}`, {
