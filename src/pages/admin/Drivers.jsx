@@ -150,15 +150,21 @@ export default function Drivers() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="w-full max-w-full space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">
-                    Drivers
-                </h1>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl lg:text-3xl">
+                        Drivers
+                    </h1>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Manage drivers, assigned cars, license details, and account status.
+                    </p>
+                </div>
 
                 <button
-                    className="btn-primary"
+                    className="btn-primary w-full sm:w-auto"
                     onClick={() => setShowForm((v) => !v)}
                 >
                     {showForm ? "Close" : "Add Driver"}
@@ -168,35 +174,43 @@ export default function Drivers() {
             {/* Create Driver */}
             {showForm && (
                 <div className="card">
-                    <h2 className="font-semibold mb-4">
-                        Create Driver
-                    </h2>
+                    <div className="mb-4">
+                        <h2 className="text-base font-semibold text-gray-900 sm:text-lg">
+                            Create Driver
+                        </h2>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            Add driver profile, login email, car assignment, and license document.
+                        </p>
+                    </div>
 
                     {error && (
-                        <div className="mb-4 text-red-600 bg-red-50 p-2 rounded text-sm">
+                        <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-600">
                             {error}
                         </div>
                     )}
 
                     {credentials && (
-                        <div className="mb-4 bg-yellow-50 border border-yellow-300 p-4 rounded">
-                            <p className="font-semibold text-sm mb-2">
+                        <div className="mb-4 rounded-xl border border-yellow-300 bg-yellow-50 p-4">
+                            <p className="mb-2 text-sm font-semibold text-yellow-800">
                                 ⚠ Save these credentials now
                             </p>
 
-                            <p className="text-sm">
-                                Email: <b>{credentials.email}</b>
-                            </p>
+                            <div className="space-y-1 text-sm text-yellow-900">
+                                <p className="break-words">
+                                    Email: <b>{credentials.email}</b>
+                                </p>
 
-                            <p className="text-sm">
-                                Password: <b>{credentials.password}</b>
-                            </p>
+                                <p className="break-words">
+                                    Password: <b>{credentials.password}</b>
+                                </p>
+                            </div>
                         </div>
                     )}
 
                     <form
                         onSubmit={handleSubmit}
-                        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                        className="grid grid-cols-1 gap-4 md:grid-cols-2"
                     >
                         <input
                             className="input-field"
@@ -273,15 +287,10 @@ export default function Drivers() {
                                 })
                             }
                         >
-                            <option value="">
-                                Select Car
-                            </option>
+                            <option value="">Select Car</option>
 
                             {cars.map((car) => (
-                                <option
-                                    key={car._id}
-                                    value={car._id}
-                                >
+                                <option key={car._id} value={car._id}>
                                     {car.name}
                                 </option>
                             ))}
@@ -299,20 +308,29 @@ export default function Drivers() {
                             }
                         />
 
-                        <input
-                            type="file"
-                            className="input-field md:col-span-2"
-                            accept=".pdf,image/*"
-                            onChange={(e) =>
-                                setForm({
-                                    ...form,
-                                    licenseDocument:
-                                        e.target.files[0],
-                                })
-                            }
-                        />
+                        <div className="md:col-span-2">
+                            <label className="mb-1 block text-sm font-medium text-gray-700">
+                                License Document
+                            </label>
 
-                        <button className="btn-primary md:col-span-2">
+                            <input
+                                type="file"
+                                className="input-field"
+                                accept=".pdf,image/*"
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        licenseDocument: e.target.files[0],
+                                    })
+                                }
+                            />
+
+                            <p className="mt-1 text-xs text-gray-500">
+                                Accepted formats: PDF or image.
+                            </p>
+                        </div>
+
+                        <button className="btn-primary w-full md:col-span-2">
                             Create Driver
                         </button>
                     </form>
@@ -320,124 +338,245 @@ export default function Drivers() {
             )}
 
             {/* Driver List */}
-            <div className="card overflow-x-auto">
-                <h2 className="font-semibold mb-4">
-                    Driver List
-                </h2>
+            <div className="card">
+                <div className="mb-4">
+                    <h2 className="text-base font-semibold text-gray-900 sm:text-lg">
+                        Driver List
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        View driver details, license documents, and status.
+                    </p>
+                </div>
 
                 {loading ? (
-                    <div>Loading...</div>
+                    <div className="rounded-xl border border-gray-100 bg-white p-6 text-sm text-gray-500">
+                        Loading...
+                    </div>
                 ) : drivers.length === 0 ? (
-                    <div className="text-gray-500">
+                    <div className="rounded-xl border border-gray-100 bg-white p-6 text-center text-sm text-gray-500">
                         No drivers found.
                     </div>
                 ) : (
-                    <table className="w-full text-sm min-w-[1200px]">
-                        <thead>
-                            <tr className="border-b text-left">
-                                <th className="py-2">Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>City</th>
-                                <th>Car</th>
-                                <th>License</th>
-                                <th>Document</th>
-                                <th>Status</th>
-                                <th className="text-right">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
+                    <>
+                        {/* Desktop / Tablet Table */}
+                        <div className="hidden overflow-x-auto rounded-xl border border-gray-100 bg-white lg:block">
+                            <table className="w-full min-w-[1200px] text-sm">
+                                <thead className="border-b bg-gray-50">
+                                    <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        <th className="px-4 py-3">Name</th>
+                                        <th className="px-4 py-3">Email</th>
+                                        <th className="px-4 py-3">Phone</th>
+                                        <th className="px-4 py-3">City</th>
+                                        <th className="px-4 py-3">Car</th>
+                                        <th className="px-4 py-3">License</th>
+                                        <th className="px-4 py-3">Document</th>
+                                        <th className="px-4 py-3">Status</th>
+                                        <th className="px-4 py-3 text-right">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
 
-                        <tbody>
-                            {drivers.map((d) => (
-                                <tr
-                                    key={d._id}
-                                    className="border-b last:border-0"
-                                >
-                                    <td className="py-2">
-                                        {d.name}
-                                    </td>
-
-                                    <td>
-                                        {d.userId?.email}
-                                    </td>
-
-                                    <td>
-                                        {d.phone || "—"}
-                                    </td>
-
-                                    <td>
-                                        {d.city || "—"}
-                                    </td>
-
-                                    <td>
-                                        {d.assignedCarId?.name ||
-                                            "—"}
-                                    </td>
-
-                                    <td>
-                                        {d.licenseNumber ||
-                                            "—"}
-                                    </td>
-
-                                    <td>
-                                        {d.licenseDocument ? (
-                                            <a
-                                                href={`${import.meta.env.VITE_API_BASE}${d.licenseDocument}`}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-blue-600 underline"
-                                            >
-                                                View
-                                            </a>
-                                        ) : (
-                                            "—"
-                                        )}
-                                    </td>
-
-                                    <td>
-                                        <button
-                                            className={
-                                                d.isActive
-                                                    ? "text-green-600"
-                                                    : "text-red-600"
-                                            }
-                                            onClick={() =>
-                                                toggleStatus(d)
-                                            }
+                                <tbody className="divide-y divide-gray-100">
+                                    {drivers.map((d) => (
+                                        <tr
+                                            key={d._id}
+                                            className="transition-colors hover:bg-gray-50"
                                         >
-                                            {d.isActive
-                                                ? "Active"
-                                                : "Inactive"}
-                                        </button>
-                                    </td>
+                                            <td className="px-4 py-3 align-top">
+                                                <div className="max-w-[180px] break-words font-medium text-gray-900">
+                                                    {d.name}
+                                                </div>
+                                            </td>
 
-                                    <td className="text-right space-x-2">
+                                            <td className="px-4 py-3 align-top">
+                                                <div className="max-w-[220px] break-words text-gray-700">
+                                                    {d.userId?.email}
+                                                </div>
+                                            </td>
+
+                                            <td className="whitespace-nowrap px-4 py-3 align-top text-gray-700">
+                                                {d.phone || "—"}
+                                            </td>
+
+                                            <td className="px-4 py-3 align-top text-gray-700">
+                                                {d.city || "—"}
+                                            </td>
+
+                                            <td className="px-4 py-3 align-top text-gray-700">
+                                                <div className="max-w-[160px] break-words">
+                                                    {d.assignedCarId?.name || "—"}
+                                                </div>
+                                            </td>
+
+                                            <td className="px-4 py-3 align-top text-gray-700">
+                                                <div className="max-w-[160px] break-words">
+                                                    {d.licenseNumber || "—"}
+                                                </div>
+                                            </td>
+
+                                            <td className="px-4 py-3 align-top">
+                                                {d.licenseDocument ? (
+                                                    <a
+                                                        href={`${import.meta.env.VITE_API_BASE}${d.licenseDocument}`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="font-medium text-blue-600 underline-offset-4 hover:underline"
+                                                    >
+                                                        View
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-gray-500">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </td>
+
+                                            <td className="px-4 py-3 align-top">
+                                                <button
+                                                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${d.isActive
+                                                            ? "bg-green-100 text-green-700"
+                                                            : "bg-red-100 text-red-700"
+                                                        }`}
+                                                    onClick={() => toggleStatus(d)}
+                                                >
+                                                    {d.isActive
+                                                        ? "Active"
+                                                        : "Inactive"}
+                                                </button>
+                                            </td>
+
+                                            <td className="px-4 py-3 align-top text-right">
+                                                <div className="flex flex-wrap items-center justify-end gap-3">
+                                                    <button
+                                                        className="text-sm font-medium text-blue-600 underline-offset-4 hover:underline"
+                                                        onClick={() => startEdit(d)}
+                                                    >
+                                                        Edit
+                                                    </button>
+
+                                                    <button
+                                                        className="text-sm font-medium text-red-600 underline-offset-4 hover:underline"
+                                                        onClick={() =>
+                                                            removeDriver(d)
+                                                        }
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile / Tablet Cards */}
+                        <div className="space-y-4 lg:hidden">
+                            {drivers.map((d) => (
+                                <div
+                                    key={d._id}
+                                    className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
+                                >
+                                    <div className="mb-3 flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <h3 className="break-words text-base font-semibold text-gray-900">
+                                                {d.name}
+                                            </h3>
+
+                                            <p className="mt-1 break-words text-sm text-gray-500">
+                                                {d.userId?.email || "—"}
+                                            </p>
+                                        </div>
+
                                         <button
-                                            className="text-blue-600"
-                                            onClick={() =>
-                                                startEdit(d)
-                                            }
+                                            className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${d.isActive
+                                                    ? "bg-green-100 text-green-700"
+                                                    : "bg-red-100 text-red-700"
+                                                }`}
+                                            onClick={() => toggleStatus(d)}
+                                        >
+                                            {d.isActive ? "Active" : "Inactive"}
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-2 border-t border-gray-100 pt-3">
+                                        <MobileInfoRow
+                                            label="Phone"
+                                            value={d.phone || "—"}
+                                        />
+
+                                        <MobileInfoRow
+                                            label="City"
+                                            value={d.city || "—"}
+                                        />
+
+                                        <MobileInfoRow
+                                            label="Car"
+                                            value={d.assignedCarId?.name || "—"}
+                                        />
+
+                                        <MobileInfoRow
+                                            label="License"
+                                            value={d.licenseNumber || "—"}
+                                        />
+
+                                        <div className="flex items-start justify-between gap-3">
+                                            <span className="text-sm text-gray-500">
+                                                Document
+                                            </span>
+
+                                            {d.licenseDocument ? (
+                                                <a
+                                                    href={`${import.meta.env.VITE_API_BASE}${d.licenseDocument}`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="text-sm font-medium text-blue-600 underline-offset-4 hover:underline"
+                                                >
+                                                    View
+                                                </a>
+                                            ) : (
+                                                <span className="text-sm font-medium text-gray-800">
+                                                    —
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                                        <button
+                                            className="btn-secondary w-full sm:flex-1"
+                                            onClick={() => startEdit(d)}
                                         >
                                             Edit
                                         </button>
 
                                         <button
-                                            className="text-red-600"
-                                            onClick={() =>
-                                                removeDriver(d)
-                                            }
+                                            className="w-full rounded-lg border-2 border-red-500 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors duration-200 hover:bg-red-50 sm:flex-1 sm:px-6 sm:py-3 sm:text-base"
+                                            onClick={() => removeDriver(d)}
                                         >
                                             Delete
                                         </button>
-                                    </td>
-                                </tr>
+                                    </div>
+                                </div>
                             ))}
-                        </tbody>
-                    </table>
+                        </div>
+                    </>
                 )}
             </div>
+        </div>
+    );
+}
+
+function MobileInfoRow({ label, value }) {
+    return (
+        <div className="flex items-start justify-between gap-3">
+            <span className="text-sm text-gray-500">{label}</span>
+
+            <span className="break-words text-right text-sm font-medium text-gray-800">
+                {value}
+            </span>
         </div>
     );
 }

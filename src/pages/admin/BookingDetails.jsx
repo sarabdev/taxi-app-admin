@@ -32,11 +32,27 @@ export default function BookingDetails() {
     }, [id]);
 
     if (loading) {
-        return <div className="text-sm text-gray-500">Loading booking…</div>;
+        return (
+            <div className="w-full">
+                <div className="card">
+                    <p className="text-sm text-gray-500 sm:text-base">
+                        Loading booking…
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     if (!booking) {
-        return <div className="text-sm text-red-600">Booking not found</div>;
+        return (
+            <div className="w-full">
+                <div className="card">
+                    <p className="text-sm font-medium text-red-600 sm:text-base">
+                        Booking not found
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     const p = booking.pricing || {};
@@ -52,112 +68,115 @@ export default function BookingDetails() {
         if (!confirm("Are you sure you want to cancel this booking?")) return;
 
         setActionLoading(true);
-        await updateBookingStatus(booking._id, "CANCELLED");
-        setBooking({ ...booking, status: "CANCELLED" });
 
-        const newLogs = await fetchBookingActivity(id);
-        setLogs(newLogs);
-        setActionLoading(false);
+        try {
+            await updateBookingStatus(booking._id, "CANCELLED");
+            setBooking({ ...booking, status: "CANCELLED" });
+
+            const newLogs = await fetchBookingActivity(id);
+            setLogs(newLogs);
+        } finally {
+            setActionLoading(false);
+        }
     };
 
     return (
-        <div className="space-y-6">
+        <div className="w-full max-w-full space-y-4 sm:space-y-6">
             {/* Back */}
-            <button
-                onClick={() => navigate(-1)}
-                className="text-primary-600 underline text-sm"
-            >
-                ← Back to bookings
-            </button>
+            <div>
+                <button
+                    onClick={() => navigate(-1)}
+                    className="inline-flex items-center text-sm font-medium text-primary-600 underline-offset-4 hover:underline"
+                >
+                    ← Back to bookings
+                </button>
+            </div>
 
             {/* Booking Overview */}
             <div className="card">
-                <div className="flex items-center justify-between mb-4">
-                    <h1 className="text-xl font-bold">Booking Details</h1>
+                <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                        <h1 className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl">
+                            Booking Details
+                        </h1>
+                        <p className="mt-1 text-sm text-gray-500">
+                            Review booking information, pricing, activity, and admin actions.
+                        </p>
+                    </div>
+
                     <span
-                        className={`px-3 py-1 rounded text-xs font-semibold ${statusColor}`}
+                        className={`inline-flex w-fit shrink-0 items-center rounded-full px-3 py-1 text-xs font-semibold ${statusColor}`}
                     >
                         {booking.status}
                     </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <b>Pickup:</b>
-                        <div className="text-gray-700">
-                            {booking.pickupLocation}
-                        </div>
-                    </div>
+                <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:gap-5">
+                    <InfoItem
+                        label="Pickup"
+                        value={booking.pickupLocation}
+                    />
 
-                    <div>
-                        <b>Dropoff:</b>
-                        <div className="text-gray-700">
-                            {booking.dropoffLocation}
-                        </div>
-                    </div>
+                    <InfoItem
+                        label="Dropoff"
+                        value={booking.dropoffLocation}
+                    />
 
-                    <div>
-                        <b>Driver:</b>
-                        <div className="text-gray-700">
-                            {booking.assignedDriverId
+                    <InfoItem
+                        label="Driver"
+                        value={
+                            booking.assignedDriverId
                                 ? `${booking.assignedDriverId.name} (${booking.assignedDriverId.userId?.email})`
-                                : "—"}
-                        </div>
-                    </div>
+                                : "—"
+                        }
+                    />
 
-                    <div>
-                        <b>Car:</b>
-                        <div className="text-gray-700">
-                            {booking.carId?.name || "—"}
-                        </div>
-                    </div>
+                    <InfoItem
+                        label="Car"
+                        value={booking.carId?.name || "—"}
+                    />
 
-                    <div>
-                        <b>Created:</b>
-                        <div className="text-gray-700">
-                            {new Date(booking.createdAt).toLocaleString()}
-                        </div>
-                    </div>
+                    <InfoItem
+                        label="Created"
+                        value={new Date(booking.createdAt).toLocaleString()}
+                    />
                 </div>
             </div>
 
             {/* Fare Breakdown */}
             <div className="card">
-                <h2 className="font-semibold mb-3">Fare Breakdown</h2>
+                <h2 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">
+                    Fare Breakdown
+                </h2>
 
-                <ul className="text-sm space-y-1">
-                    <li>
-                        Base fare:
-                        <span className="float-right">
-                            £{Number(p.baseFare || 0).toFixed(2)}
-                        </span>
-                    </li>
+                <ul className="space-y-2 text-sm">
+                    <FareRow
+                        label="Base fare"
+                        value={`£${Number(p.baseFare || 0).toFixed(2)}`}
+                    />
 
-                    <li>
-                        Distance:
-                        <span className="float-right">
-                            {Number(p.distanceMiles || 0).toFixed(2)} miles × £
-                            {Number(p.pricePerMile || 0).toFixed(2)}
-                        </span>
-                    </li>
+                    <FareRow
+                        label="Distance"
+                        value={`${Number(p.distanceMiles || 0).toFixed(2)} miles × £${Number(
+                            p.pricePerMile || 0
+                        ).toFixed(2)}`}
+                    />
 
-                    <li>
-                        Car discount:
-                        <span className="float-right text-green-600">
-                            −£{Number(p.carDiscountAmount || 0).toFixed(2)}
-                        </span>
-                    </li>
+                    <FareRow
+                        label="Car discount"
+                        value={`−£${Number(p.carDiscountAmount || 0).toFixed(2)}`}
+                        valueClassName="text-green-600"
+                    />
 
-                    <li>
-                        Coupon discount:
-                        <span className="float-right text-green-600">
-                            −£{Number(p.couponDiscountAmount || 0).toFixed(2)}
-                        </span>
-                    </li>
+                    <FareRow
+                        label="Coupon discount"
+                        value={`−£${Number(p.couponDiscountAmount || 0).toFixed(2)}`}
+                        valueClassName="text-green-600"
+                    />
 
-                    <li className="font-bold border-t pt-2">
-                        Total:
-                        <span className="float-right text-primary-600">
+                    <li className="flex items-center justify-between gap-4 border-t pt-3 font-bold">
+                        <span>Total:</span>
+                        <span className="text-right text-primary-600">
                             £{Number(p.totalFare || 0).toFixed(2)}
                         </span>
                     </li>
@@ -167,8 +186,11 @@ export default function BookingDetails() {
             {/* Driver Completion Note */}
             {booking.completionNote && (
                 <div className="card">
-                    <h2 className="font-semibold mb-2">Driver Note</h2>
-                    <p className="text-sm text-gray-700">
+                    <h2 className="mb-2 text-base font-semibold text-gray-900 sm:text-lg">
+                        Driver Note
+                    </h2>
+
+                    <p className="break-words text-sm leading-relaxed text-gray-700">
                         {booking.completionNote}
                     </p>
                 </div>
@@ -176,29 +198,72 @@ export default function BookingDetails() {
 
             {/* Activity Timeline */}
             <div className="card">
-                <h2 className="font-semibold mb-3">Activity Timeline</h2>
-                <BookingTimeline logs={logs} />
+                <h2 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">
+                    Activity Timeline
+                </h2>
+
+                <div className="max-w-full overflow-x-auto">
+                    <BookingTimeline logs={logs} />
+                </div>
             </div>
 
             {/* Admin Actions */}
             {booking.status !== "COMPLETED" &&
                 booking.status !== "CANCELLED" && (
                     <div className="card border border-red-200 bg-red-50">
-                        <h2 className="font-semibold mb-3 text-red-700">
-                            Admin Actions
-                        </h2>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h2 className="text-base font-semibold text-red-700 sm:text-lg">
+                                    Admin Actions
+                                </h2>
 
-                        <button
-                            className="btn-secondary"
-                            disabled={actionLoading}
-                            onClick={handleCancel}
-                        >
-                            {actionLoading
-                                ? "Cancelling…"
-                                : "Cancel Booking"}
-                        </button>
+                                <p className="mt-1 text-sm text-red-600">
+                                    Cancel this booking only if required.
+                                </p>
+                            </div>
+
+                            <button
+                                className="btn-secondary w-full sm:w-auto"
+                                disabled={actionLoading}
+                                onClick={handleCancel}
+                            >
+                                {actionLoading ? "Cancelling…" : "Cancel Booking"}
+                            </button>
+                        </div>
                     </div>
                 )}
         </div>
+    );
+}
+
+/* ─────────────────────────────
+ * Reusable detail row/card item
+ * ───────────────────────────── */
+function InfoItem({ label, value }) {
+    return (
+        <div className="min-w-0 rounded-lg border border-gray-100 bg-gray-50 p-3 sm:p-4">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {label}
+            </p>
+
+            <p className="break-words text-sm leading-relaxed text-gray-800">
+                {value || "—"}
+            </p>
+        </div>
+    );
+}
+
+/* ─────────────────────────────
+ * Reusable fare row
+ * ───────────────────────────── */
+function FareRow({ label, value, valueClassName = "text-gray-700" }) {
+    return (
+        <li className="flex items-start justify-between gap-4">
+            <span className="text-gray-600">{label}:</span>
+
+            <span className={`text-right font-medium ${valueClassName}`}>
+                {value}
+            </span>
+        </li>
     );
 }

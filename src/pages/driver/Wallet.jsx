@@ -8,49 +8,183 @@ export default function Wallet() {
         fetchMyWallet().then(setData);
     }, []);
 
-    if (!data) return <div>Loading wallet...</div>;
+    if (!data) {
+        return (
+            <div className="w-full">
+                <div className="card">
+                    <p className="text-sm text-gray-500 sm:text-base">
+                        Loading wallet...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-6">
+        <div className="w-full max-w-full space-y-4 sm:space-y-6">
+            {/* Wallet Balance */}
             <div className="card">
-                <h1 className="text-xl font-bold">Wallet Balance</h1>
-                <p className="text-3xl font-semibold mt-2">
-                    ${data.balance.toFixed(2)}
-                </p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <h1 className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl lg:text-3xl">
+                            Wallet Balance
+                        </h1>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            View your available balance and transaction history.
+                        </p>
+                    </div>
+
+                    <div className="rounded-xl border border-primary-100 bg-primary-50 p-4 sm:min-w-[220px] sm:text-right">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-primary-700">
+                            Available Balance
+                        </p>
+
+                        <p className="mt-1 break-words text-2xl font-bold text-primary-900 sm:text-3xl">
+                            £{Number(data.balance || 0).toFixed(2)}
+                        </p>
+                    </div>
+                </div>
             </div>
 
+            {/* Transactions */}
             <div className="card">
-                <h2 className="font-semibold mb-4">Transactions</h2>
+                <div className="mb-4">
+                    <h2 className="text-base font-semibold text-gray-900 sm:text-lg">
+                        Transactions
+                    </h2>
 
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b text-left">
-                            <th className="py-2">Type</th>
-                            <th>Amount</th>
-                            <th>Note</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.transactions.map((t) => (
-                            <tr key={t._id} className="border-b last:border-0">
-                                <td className="py-2">{t.type}</td>
-                                <td
-                                    className={
-                                        t.type === "CREDIT"
+                    <p className="mt-1 text-sm text-gray-500">
+                        Review your credit and debit wallet activity.
+                    </p>
+                </div>
+
+                {/* Desktop / Tablet Table */}
+                <div className="hidden overflow-x-auto rounded-xl border border-gray-100 bg-white md:block">
+                    <table className="w-full min-w-[700px] text-sm">
+                        <thead className="border-b bg-gray-50">
+                            <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                <th className="px-4 py-3">Type</th>
+                                <th className="px-4 py-3">Amount</th>
+                                <th className="px-4 py-3">Note</th>
+                                <th className="px-4 py-3">Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody className="divide-y divide-gray-100">
+                            {data.transactions.map((t) => (
+                                <tr
+                                    key={t._id}
+                                    className="transition-colors hover:bg-gray-50"
+                                >
+                                    <td className="px-4 py-3 align-top">
+                                        <span
+                                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${t.type === "CREDIT"
+                                                    ? "bg-green-100 text-green-700"
+                                                    : "bg-red-100 text-red-700"
+                                                }`}
+                                        >
+                                            {t.type}
+                                        </span>
+                                    </td>
+
+                                    <td
+                                        className={`whitespace-nowrap px-4 py-3 align-top font-semibold ${t.type === "CREDIT"
+                                                ? "text-green-600"
+                                                : "text-red-600"
+                                            }`}
+                                    >
+                                        {t.type === "CREDIT" ? "+" : "-"}£
+                                        {Number(t.amount || 0).toFixed(2)}
+                                    </td>
+
+                                    <td className="px-4 py-3 align-top text-gray-700">
+                                        <div className="max-w-[320px] break-words">
+                                            {t.note || "—"}
+                                        </div>
+                                    </td>
+
+                                    <td className="whitespace-nowrap px-4 py-3 align-top text-gray-700">
+                                        {new Date(t.createdAt).toLocaleDateString()}
+                                    </td>
+                                </tr>
+                            ))}
+
+                            {data.transactions.length === 0 && (
+                                <tr>
+                                    <td
+                                        className="px-4 py-8 text-center text-sm text-gray-500"
+                                        colSpan={4}
+                                    >
+                                        No transactions yet.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="space-y-4 md:hidden">
+                    {data.transactions.map((t) => (
+                        <div
+                            key={t._id}
+                            className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
+                        >
+                            <div className="mb-3 flex items-start justify-between gap-3">
+                                <span
+                                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${t.type === "CREDIT"
+                                            ? "bg-green-100 text-green-700"
+                                            : "bg-red-100 text-red-700"
+                                        }`}
+                                >
+                                    {t.type}
+                                </span>
+
+                                <span
+                                    className={`shrink-0 text-right text-base font-bold ${t.type === "CREDIT"
                                             ? "text-green-600"
                                             : "text-red-600"
-                                    }
+                                        }`}
                                 >
-                                    {t.type === "CREDIT" ? "+" : "-"}${t.amount}
-                                </td>
-                                <td>{t.note}</td>
-                                <td>{new Date(t.createdAt).toLocaleDateString()}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                    {t.type === "CREDIT" ? "+" : "-"}£
+                                    {Number(t.amount || 0).toFixed(2)}
+                                </span>
+                            </div>
+
+                            <div className="space-y-2 border-t border-gray-100 pt-3">
+                                <MobileInfoRow
+                                    label="Note"
+                                    value={t.note || "—"}
+                                />
+
+                                <MobileInfoRow
+                                    label="Date"
+                                    value={new Date(t.createdAt).toLocaleDateString()}
+                                />
+                            </div>
+                        </div>
+                    ))}
+
+                    {data.transactions.length === 0 && (
+                        <div className="rounded-xl border border-gray-100 bg-white p-6 text-center text-sm text-gray-500">
+                            No transactions yet.
+                        </div>
+                    )}
+                </div>
             </div>
+        </div>
+    );
+}
+
+function MobileInfoRow({ label, value }) {
+    return (
+        <div className="flex items-start justify-between gap-3">
+            <span className="text-sm text-gray-500">{label}</span>
+
+            <span className="break-words text-right text-sm font-medium text-gray-800">
+                {value}
+            </span>
         </div>
     );
 }

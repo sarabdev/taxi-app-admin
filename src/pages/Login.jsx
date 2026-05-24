@@ -30,46 +30,55 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-4">
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-4 py-6 sm:px-6 lg:px-8">
             <div className="w-full max-w-md">
                 {/* Card */}
                 <form
                     onSubmit={handleSubmit}
-                    className="bg-white rounded-2xl shadow-lg p-8"
+                    className="w-full rounded-2xl bg-white p-5 shadow-lg sm:p-8"
                 >
                     {/* Header */}
-                    <div className="text-center mb-8">
-                        <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center">
-                            <Lock className="h-6 w-6 text-primary-600" />
+                    <div className="mb-6 text-center sm:mb-8">
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 sm:h-14 sm:w-14">
+                            <Lock className="h-6 w-6 text-primary-600 sm:h-7 sm:w-7" />
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900">
+
+                        <h1 className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl">
                             Welcome Back
                         </h1>
-                        <p className="text-sm text-gray-500 mt-1">
+
+                        <p className="mt-1 text-sm text-gray-500">
                             Sign in to continue
                         </p>
                     </div>
 
                     {/* Error */}
                     {error && (
-                        <div className="mb-5 text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg">
+                        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-600">
                             {error}
                         </div>
                     )}
 
                     {/* Email */}
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            htmlFor="email"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Email
                         </label>
+
                         <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+
                             <input
+                                id="email"
                                 type="email"
                                 placeholder="admin@example.com"
-                                className="w-full pl-10 pr-3 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500 sm:py-3 sm:text-base"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                autoComplete="email"
                                 required
                             />
                         </div>
@@ -77,17 +86,24 @@ export default function Login() {
 
                     {/* Password */}
                     <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            htmlFor="password"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Password
                         </label>
+
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+
                             <input
+                                id="password"
                                 type="password"
                                 placeholder="••••••••"
-                                className="w-full pl-10 pr-3 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500 sm:py-3 sm:text-base"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                autoComplete="current-password"
                                 required
                             />
                         </div>
@@ -97,13 +113,13 @@ export default function Login() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full rounded-lg bg-primary-600 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3 sm:text-base"
                     >
                         {loading ? "Signing in…" : "Sign In"}
                     </button>
 
                     {/* Footer */}
-                    <div className="mt-6 text-center text-xs text-gray-500">
+                    <div className="mt-6 text-center text-xs text-gray-500 sm:text-sm">
                         Admin & Driver access only
                     </div>
                 </form>

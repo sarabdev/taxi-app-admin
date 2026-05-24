@@ -11,22 +11,35 @@ export default function Payouts() {
     const [note, setNote] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
+    const [creating, setCreating] = useState(false);
 
     async function load() {
         setLoading(true);
-        const [d, p] = await Promise.all([fetchDrivers(), fetchAdminPayouts()]);
-        setDrivers(d);
-        setPayouts(p);
-        setLoading(false);
+
+        try {
+            const [d, p] = await Promise.all([
+                fetchDrivers(),
+                fetchAdminPayouts(),
+            ]);
+
+            setDrivers(d);
+            setPayouts(p);
+        } finally {
+            setLoading(false);
+        }
     }
 
     useEffect(() => {
-        load().catch((e) => setError(e.message));
+        load().catch((e) => {
+            setError(e.message);
+            setLoading(false);
+        });
     }, []);
 
     const handleCreate = async (e) => {
         e.preventDefault();
         setError("");
+        setCreating(true);
 
         try {
             await createPayout({
@@ -43,21 +56,35 @@ export default function Payouts() {
             await load();
         } catch (e) {
             setError(e.message);
+        } finally {
+            setCreating(false);
         }
     };
 
     return (
-        <div className="space-y-6">
+        <div className="w-full max-w-full space-y-4 sm:space-y-6">
+            {/* Create Payout */}
             <div className="card">
-                <h1 className="text-xl font-bold mb-4">Payouts</h1>
+                <div className="mb-4">
+                    <h1 className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl lg:text-3xl">
+                        Payouts
+                    </h1>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Create driver payouts and review payout history.
+                    </p>
+                </div>
 
                 {error && (
-                    <div className="mb-4 text-red-600 text-sm bg-red-50 p-2 rounded">
+                    <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-600">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <form
+                    onSubmit={handleCreate}
+                    className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+                >
                     <select
                         className="input-field"
                         value={driverId}
@@ -65,6 +92,7 @@ export default function Payouts() {
                         required
                     >
                         <option value="">Select Driver</option>
+
                         {drivers.map((d) => (
                             <option key={d._id} value={d._id}>
                                 {d.name} ({d.phone || "no phone"})
@@ -89,12 +117,16 @@ export default function Payouts() {
                         onChange={(e) => setReference(e.target.value)}
                     />
 
-                    <button className="btn-primary" type="submit">
-                        Create Payout
+                    <button
+                        className="btn-primary w-full"
+                        type="submit"
+                        disabled={creating}
+                    >
+                        {creating ? "Creating..." : "Create Payout"}
                     </button>
 
                     <input
-                        className="input-field md:col-span-4"
+                        className="input-field sm:col-span-2 xl:col-span-4"
                         placeholder="Note (optional)"
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
@@ -102,36 +134,149 @@ export default function Payouts() {
                 </form>
             </div>
 
+            {/* Payout History */}
             <div className="card">
-                <h2 className="font-semibold mb-4">Payout History</h2>
+                <div className="mb-4">
+                    <h2 className="text-base font-semibold text-gray-900 sm:text-lg">
+                        Payout History
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        View completed payout records with driver, amount, reference, and date.
+                    </p>
+                </div>
 
                 {loading ? (
-                    <div>Loading...</div>
+                    <div className="rounded-xl border border-gray-100 bg-white p-6 text-sm text-gray-500">
+                        Loading...
+                    </div>
                 ) : (
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b text-left">
-                                <th className="py-2">Driver</th>
-                                <th>Amount</th>
-                                <th>Method</th>
-                                <th>Reference</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <>
+                        {/* Desktop / Tablet Table */}
+                        <div className="hidden overflow-x-auto rounded-xl border border-gray-100 bg-white md:block">
+                            <table className="w-full min-w-[750px] text-sm">
+                                <thead className="border-b bg-gray-50">
+                                    <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        <th className="px-4 py-3">Driver</th>
+                                        <th className="px-4 py-3">Amount</th>
+                                        <th className="px-4 py-3">Method</th>
+                                        <th className="px-4 py-3">Reference</th>
+                                        <th className="px-4 py-3">Date</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody className="divide-y divide-gray-100">
+                                    {payouts.map((p) => (
+                                        <tr
+                                            key={p._id}
+                                            className="transition-colors hover:bg-gray-50"
+                                        >
+                                            <td className="px-4 py-3 align-top">
+                                                <div className="max-w-[220px] break-words font-medium text-gray-900">
+                                                    {p.driverId?.name || "—"}
+                                                </div>
+                                            </td>
+
+                                            <td className="whitespace-nowrap px-4 py-3 align-top font-semibold text-green-600">
+                                                £{Number(p.amount || 0).toFixed(2)}
+                                            </td>
+
+                                            <td className="px-4 py-3 align-top text-gray-700">
+                                                {p.method || "—"}
+                                            </td>
+
+                                            <td className="px-4 py-3 align-top text-gray-700">
+                                                <div className="max-w-[240px] break-words">
+                                                    {p.reference || "—"}
+                                                </div>
+                                            </td>
+
+                                            <td className="whitespace-nowrap px-4 py-3 align-top text-gray-700">
+                                                {new Date(p.createdAt).toLocaleDateString()}
+                                            </td>
+                                        </tr>
+                                    ))}
+
+                                    {payouts.length === 0 && (
+                                        <tr>
+                                            <td
+                                                className="px-4 py-8 text-center text-sm text-gray-500"
+                                                colSpan={5}
+                                            >
+                                                No payouts yet.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile Cards */}
+                        <div className="space-y-4 md:hidden">
                             {payouts.map((p) => (
-                                <tr key={p._id} className="border-b last:border-0">
-                                    <td className="py-2">{p.driverId?.name || "—"}</td>
-                                    <td>${Number(p.amount).toFixed(2)}</td>
-                                    <td>{p.method}</td>
-                                    <td>{p.reference || "—"}</td>
-                                    <td>{new Date(p.createdAt).toLocaleDateString()}</td>
-                                </tr>
+                                <div
+                                    key={p._id}
+                                    className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
+                                >
+                                    <div className="mb-3 flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <h3 className="break-words text-base font-semibold text-gray-900">
+                                                {p.driverId?.name || "—"}
+                                            </h3>
+
+                                            <p className="mt-1 text-xs uppercase tracking-wide text-gray-500">
+                                                {p.method || "—"}
+                                            </p>
+                                        </div>
+
+                                        <div className="shrink-0 text-right">
+                                            <p className="text-base font-bold text-green-600">
+                                                £{Number(p.amount || 0).toFixed(2)}
+                                            </p>
+
+                                            <p className="text-[10px] uppercase tracking-wide text-gray-400">
+                                                payout
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 border-t border-gray-100 pt-3">
+                                        <MobileInfoRow
+                                            label="Reference"
+                                            value={p.reference || "—"}
+                                        />
+
+                                        <MobileInfoRow
+                                            label="Date"
+                                            value={new Date(
+                                                p.createdAt
+                                            ).toLocaleDateString()}
+                                        />
+                                    </div>
+                                </div>
                             ))}
-                        </tbody>
-                    </table>
+
+                            {payouts.length === 0 && (
+                                <div className="rounded-xl border border-gray-100 bg-white p-6 text-center text-sm text-gray-500">
+                                    No payouts yet.
+                                </div>
+                            )}
+                        </div>
+                    </>
                 )}
             </div>
+        </div>
+    );
+}
+
+function MobileInfoRow({ label, value }) {
+    return (
+        <div className="flex items-start justify-between gap-3">
+            <span className="text-sm text-gray-500">{label}</span>
+
+            <span className="break-words text-right text-sm font-medium text-gray-800">
+                {value}
+            </span>
         </div>
     );
 }

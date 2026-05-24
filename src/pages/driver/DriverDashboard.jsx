@@ -20,40 +20,54 @@ export default function DriverDashboard() {
 
     if (loading) {
         return (
-            <div className="card">
-                <p className="text-gray-500">Loading dashboard…</p>
+            <div className="w-full">
+                <div className="card">
+                    <p className="text-sm text-gray-500 sm:text-base">
+                        Loading dashboard…
+                    </p>
+                </div>
             </div>
         );
     }
 
     if (!stats) {
         return (
-            <div className="card">
-                <p className="text-red-600">Failed to load dashboard.</p>
+            <div className="w-full">
+                <div className="card">
+                    <p className="text-sm font-medium text-red-600 sm:text-base">
+                        Failed to load dashboard.
+                    </p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className="w-full max-w-full space-y-4 sm:space-y-6">
             {/* Header */}
-            <div>
-                <h1 className="text-2xl font-bold mb-1">Driver Dashboard</h1>
-                <p className="text-gray-600">
+            <div className="card">
+                <h1 className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl lg:text-3xl">
+                    Driver Dashboard
+                </h1>
+
+                <p className="mt-1 text-sm leading-relaxed text-gray-600 sm:text-base">
                     Your bookings, earnings, and wallet overview.
                 </p>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <StatCard
                     label="Assigned Bookings"
                     value={stats.assignedBookings}
                 />
+
                 <StatCard
                     label="Completed Bookings"
                     value={stats.completedBookings}
+                    highlight
                 />
+
                 <StatCard
                     label="Today’s Bookings"
                     value={stats.bookingsToday}
@@ -62,20 +76,30 @@ export default function DriverDashboard() {
 
             {/* Wallet */}
             <div className="card">
-                <h2 className="font-semibold mb-4">Wallet Summary</h2>
+                <div className="mb-4">
+                    <h2 className="text-base font-semibold text-gray-900 sm:text-lg">
+                        Wallet Summary
+                    </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                    <p className="mt-1 text-sm text-gray-500">
+                        Track your total earnings, paid amount, and available balance.
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <WalletItem
                         label="Total Earned"
-                        value={`£${stats.totalEarned.toFixed(2)}`}
+                        value={`£${Number(stats.totalEarned || 0).toFixed(2)}`}
                     />
+
                     <WalletItem
                         label="Total Paid"
-                        value={`£${stats.totalPaid.toFixed(2)}`}
+                        value={`£${Number(stats.totalPaid || 0).toFixed(2)}`}
                     />
+
                     <WalletItem
                         label="Available Balance"
-                        value={`£${stats.balance.toFixed(2)}`}
+                        value={`£${Number(stats.balance || 0).toFixed(2)}`}
                         highlight
                     />
                 </div>
@@ -88,11 +112,24 @@ export default function DriverDashboard() {
  * Small UI helpers
  * ───────────────────────────── */
 
-function StatCard({ label, value }) {
+function StatCard({ label, value, highlight }) {
     return (
-        <div className="card">
-            <p className="text-sm text-gray-500 mb-1">{label}</p>
-            <p className="text-2xl font-bold">{value}</p>
+        <div
+            className={`min-w-0 rounded-xl border bg-white p-4 shadow-sm transition-shadow duration-200 hover:shadow-md sm:p-5 lg:p-6 ${highlight
+                    ? "border-green-200 bg-green-50"
+                    : "border-gray-100"
+                }`}
+        >
+            <p className="mb-1 truncate text-xs font-medium uppercase tracking-wide text-gray-500 sm:text-sm">
+                {label}
+            </p>
+
+            <p
+                className={`break-words text-2xl font-bold leading-tight sm:text-3xl ${highlight ? "text-green-700" : "text-gray-900"
+                    }`}
+            >
+                {value}
+            </p>
         </div>
     );
 }
@@ -100,13 +137,21 @@ function StatCard({ label, value }) {
 function WalletItem({ label, value, highlight }) {
     return (
         <div
-            className={`rounded-lg p-4 border ${highlight
-                    ? "bg-green-50 border-green-200 text-green-700"
-                    : "bg-gray-50 border-gray-200"
+            className={`min-w-0 rounded-xl border p-4 shadow-sm sm:p-5 ${highlight
+                    ? "border-green-200 bg-green-50"
+                    : "border-gray-200 bg-gray-50"
                 }`}
         >
-            <p className="text-xs text-gray-500 mb-1">{label}</p>
-            <p className="text-lg font-bold">{value}</p>
+            <p className="mb-1 truncate text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {label}
+            </p>
+
+            <p
+                className={`break-words text-xl font-bold leading-tight sm:text-2xl ${highlight ? "text-green-700" : "text-gray-900"
+                    }`}
+            >
+                {value}
+            </p>
         </div>
     );
 }

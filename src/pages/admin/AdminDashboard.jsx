@@ -20,32 +20,45 @@ export default function AdminDashboard() {
 
     if (loading) {
         return (
-            <div className="card">
-                <p className="text-gray-500">Loading dashboard…</p>
+            <div className="w-full">
+                <div className="card">
+                    <p className="text-sm text-gray-500 sm:text-base">
+                        Loading dashboard…
+                    </p>
+                </div>
             </div>
         );
     }
 
     if (!stats) {
         return (
-            <div className="card">
-                <p className="text-red-600">Failed to load dashboard</p>
+            <div className="w-full">
+                <div className="card">
+                    <p className="text-sm font-medium text-red-600 sm:text-base">
+                        Failed to load dashboard
+                    </p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className="w-full max-w-full space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="card">
-                <h1 className="text-2xl font-bold mb-1">Admin Dashboard</h1>
-                <p className="text-gray-600">
-                    Overview of bookings, earnings, and system status.
-                </p>
+                <div className="flex flex-col gap-1 sm:gap-2">
+                    <h1 className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl lg:text-3xl">
+                        Admin Dashboard
+                    </h1>
+
+                    <p className="text-sm leading-relaxed text-gray-600 sm:text-base">
+                        Overview of bookings, earnings, and system status.
+                    </p>
+                </div>
             </div>
 
             {/* KPI Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3 xl:gap-6">
                 <StatBox
                     title="Bookings Today"
                     value={stats.bookingsToday}
@@ -94,17 +107,20 @@ export default function AdminDashboard() {
 function StatBox({ title, value, highlight, warning }) {
     return (
         <div
-            className={`rounded-lg border p-5 bg-white shadow-sm
-        ${highlight ? "border-green-300 bg-green-50" : ""}
-        ${warning ? "border-yellow-300 bg-yellow-50" : ""}
-      `}
+            className={`min-w-0 rounded-xl border bg-white p-4 shadow-sm transition-shadow duration-200 hover:shadow-md sm:p-5 lg:p-6
+                ${highlight ? "border-green-300 bg-green-50" : "border-gray-100"}
+                ${warning ? "border-yellow-300 bg-yellow-50" : ""}
+            `}
         >
-            <p className="text-sm text-gray-500 mb-1">{title}</p>
+            <p className="mb-1 truncate text-xs font-medium uppercase tracking-wide text-gray-500 sm:text-sm">
+                {title}
+            </p>
+
             <p
-                className={`text-2xl font-bold
-          ${highlight ? "text-green-700" : ""}
-          ${warning ? "text-yellow-700" : ""}
-        `}
+                className={`break-words text-xl font-bold leading-tight sm:text-2xl lg:text-3xl
+                    ${highlight ? "text-green-700" : "text-gray-900"}
+                    ${warning ? "text-yellow-700" : ""}
+                `}
             >
                 {value}
             </p>
