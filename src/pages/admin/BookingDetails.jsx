@@ -56,6 +56,7 @@ export default function BookingDetails() {
     }
 
     const p = booking.pricing || {};
+    const returnTrip = booking.returnTrip || {};
 
     const statusColor = {
         PENDING: "bg-yellow-100 text-yellow-700",
@@ -123,6 +124,42 @@ export default function BookingDetails() {
                     />
 
                     <InfoItem
+                        label="Pickup Date & Time"
+                        value={formatDateTime(
+                            booking.pickupDate,
+                            booking.pickupTime,
+                            booking.createdAt
+                        )}
+                    />
+
+                    <InfoItem
+                        label="Arrival Date & Time"
+                        value={formatStoredDateTime(booking.flight?.arrivalDateTime)}
+                    />
+
+                    {booking.isReturnTrip && (
+                        <>
+                            <InfoItem
+                                label="Return Pickup"
+                                value={returnTrip.pickupLocation}
+                            />
+
+                            <InfoItem
+                                label="Return Dropoff"
+                                value={returnTrip.dropoffLocation}
+                            />
+
+                            <InfoItem
+                                label="Return Date & Time"
+                                value={formatDateTime(
+                                    returnTrip.pickupDate,
+                                    returnTrip.pickupTime
+                                )}
+                            />
+                        </>
+                    )}
+
+                    <InfoItem
                         label="Driver"
                         value={
                             booking.assignedDriverId
@@ -161,6 +198,13 @@ export default function BookingDetails() {
                             p.pricePerMile || 0
                         ).toFixed(2)}`}
                     />
+
+                    {booking.isReturnTrip && (
+                        <FareRow
+                            label="Return distance"
+                            value={`${Number(p.returnDistanceMiles || 0).toFixed(2)} miles`}
+                        />
+                    )}
 
                     <FareRow
                         label="Car discount"
@@ -256,6 +300,22 @@ function InfoItem({ label, value }) {
 /* ─────────────────────────────
  * Reusable fare row
  * ───────────────────────────── */
+function formatDateTime(date, time, fallback) {
+    if (date && time) {
+        return `${new Date(`${date}T${time}`).toLocaleDateString()} ${time}`;
+    }
+
+    if (date) return date;
+
+    return fallback ? new Date(fallback).toLocaleString() : "—";
+}
+
+function formatStoredDateTime(value) {
+    if (!value) return "—";
+
+    return new Date(value).toLocaleString();
+}
+
 function FareRow({ label, value, valueClassName = "text-gray-700" }) {
     return (
         <li className="flex items-start justify-between gap-4">

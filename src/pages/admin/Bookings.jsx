@@ -100,12 +100,34 @@ export default function Bookings() {
                                         <div className="mt-1 break-words text-xs text-gray-500">
                                             → {b.dropoffLocation}
                                         </div>
+
+                                        {b.isReturnTrip && b.returnTrip && (
+                                            <div className="mt-2 rounded-lg bg-gray-50 p-2 text-xs text-gray-600">
+                                                <div className="font-semibold text-gray-700">
+                                                    Return
+                                                </div>
+                                                <div className="mt-1 break-words">
+                                                    {b.returnTrip.pickupLocation}
+                                                </div>
+                                                <div className="mt-1 break-words">
+                                                    → {b.returnTrip.dropoffLocation}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </td>
 
                                 {/* Date */}
                                 <td className="whitespace-nowrap px-4 py-3 align-top text-gray-700">
-                                    {new Date(b.createdAt).toLocaleDateString()}
+                                    {formatDateTime(b.pickupDate, b.pickupTime, b.createdAt)}
+                                    {b.isReturnTrip && b.returnTrip?.pickupDate && (
+                                        <div className="mt-1 text-xs text-gray-500">
+                                            Return: {formatDateTime(
+                                                b.returnTrip.pickupDate,
+                                                b.returnTrip.pickupTime
+                                            )}
+                                        </div>
+                                    )}
                                 </td>
 
                                 {/* Status */}
@@ -205,6 +227,20 @@ export default function Bookings() {
                                 <p className="mt-1 break-words text-xs text-gray-500">
                                     → {b.dropoffLocation}
                                 </p>
+
+                                {b.isReturnTrip && b.returnTrip && (
+                                    <div className="mt-2 rounded-lg bg-gray-50 p-2 text-xs text-gray-600">
+                                        <p className="font-semibold text-gray-700">
+                                            Return
+                                        </p>
+                                        <p className="mt-1 break-words">
+                                            {b.returnTrip.pickupLocation}
+                                        </p>
+                                        <p className="mt-1 break-words">
+                                            → {b.returnTrip.dropoffLocation}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
                             <p className="shrink-0 text-right text-sm font-semibold text-gray-900">
@@ -215,8 +251,18 @@ export default function Bookings() {
                         <div className="grid grid-cols-1 gap-3 border-t border-gray-100 pt-3">
                             <MobileInfoRow
                                 label="Date"
-                                value={new Date(b.createdAt).toLocaleDateString()}
+                                value={formatDateTime(b.pickupDate, b.pickupTime, b.createdAt)}
                             />
+
+                            {b.isReturnTrip && b.returnTrip?.pickupDate && (
+                                <MobileInfoRow
+                                    label="Return"
+                                    value={formatDateTime(
+                                        b.returnTrip.pickupDate,
+                                        b.returnTrip.pickupTime
+                                    )}
+                                />
+                            )}
 
                             <div className="flex items-center justify-between gap-3">
                                 <span className="text-sm text-gray-500">
@@ -344,4 +390,14 @@ function MobileInfoRow({ label, value }) {
             </span>
         </div>
     );
+}
+
+function formatDateTime(date, time, fallback) {
+    if (date && time) {
+        return `${new Date(`${date}T${time}`).toLocaleDateString()} ${time}`;
+    }
+
+    if (date) return date;
+
+    return fallback ? new Date(fallback).toLocaleDateString() : "—";
 }
