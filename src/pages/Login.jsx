@@ -3,6 +3,7 @@ import { login as loginApi } from "../api/auth";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Lock, Mail } from "lucide-react";
+import airportLogo from "../assets/my-airport-logo.png";
 
 export default function Login() {
     const { login } = useAuth();
@@ -39,8 +40,12 @@ export default function Login() {
                 >
                     {/* Header */}
                     <div className="mb-6 text-center sm:mb-8">
-                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 sm:h-14 sm:w-14">
-                            <Lock className="h-6 w-6 text-primary-600 sm:h-7 sm:w-7" />
+                        <div className="mx-auto mb-4 flex h-20 w-32 items-center justify-center overflow-hidden sm:h-24 sm:w-40">
+                            <img
+                                src={airportLogo}
+                                alt="Taxi service logo"
+                                className="h-full w-full scale-[1.65] object-contain"
+                            />
                         </div>
 
                         <h1 className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl">

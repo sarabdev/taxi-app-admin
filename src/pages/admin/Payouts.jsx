@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchDrivers } from "../../api/drivers";
 import { createPayout, fetchAdminPayouts } from "../../api/payouts";
 
@@ -12,6 +12,7 @@ export default function Payouts() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
+    const payoutRequestId = useRef(null);
 
     async function load() {
         setLoading(true);
@@ -42,14 +43,17 @@ export default function Payouts() {
         setCreating(true);
 
         try {
+            payoutRequestId.current ||= crypto.randomUUID();
             await createPayout({
                 driverId,
                 amount: Number(amount),
                 method: "BANK",
                 reference,
                 note,
+                requestId: payoutRequestId.current,
             });
 
+            payoutRequestId.current = null;
             setAmount("");
             setReference("");
             setNote("");
@@ -88,7 +92,10 @@ export default function Payouts() {
                     <select
                         className="input-field"
                         value={driverId}
-                        onChange={(e) => setDriverId(e.target.value)}
+                        onChange={(e) => {
+                            payoutRequestId.current = null;
+                            setDriverId(e.target.value);
+                        }}
                         required
                     >
                         <option value="">Select Driver</option>
@@ -104,9 +111,13 @@ export default function Payouts() {
                         className="input-field"
                         placeholder="Amount"
                         type="number"
-                        min="1"
+                        min="0.01"
+                        step="0.01"
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        onChange={(e) => {
+                            payoutRequestId.current = null;
+                            setAmount(e.target.value);
+                        }}
                         required
                     />
 
@@ -114,7 +125,10 @@ export default function Payouts() {
                         className="input-field"
                         placeholder="Bank Ref (optional)"
                         value={reference}
-                        onChange={(e) => setReference(e.target.value)}
+                        onChange={(e) => {
+                            payoutRequestId.current = null;
+                            setReference(e.target.value);
+                        }}
                     />
 
                     <button
@@ -129,7 +143,10 @@ export default function Payouts() {
                         className="input-field sm:col-span-2 xl:col-span-4"
                         placeholder="Note (optional)"
                         value={note}
-                        onChange={(e) => setNote(e.target.value)}
+                        onChange={(e) => {
+                            payoutRequestId.current = null;
+                            setNote(e.target.value);
+                        }}
                     />
                 </form>
             </div>
@@ -142,7 +159,7 @@ export default function Payouts() {
                     </h2>
 
                     <p className="mt-1 text-sm text-gray-500">
-                        View completed payout records with driver, amount, reference, and date.
+                        View payout records with status, amount, reference, and date.
                     </p>
                 </div>
 
@@ -160,6 +177,7 @@ export default function Payouts() {
                                         <th className="px-4 py-3">Driver</th>
                                         <th className="px-4 py-3">Amount</th>
                                         <th className="px-4 py-3">Method</th>
+                                        <th className="px-4 py-3">Status</th>
                                         <th className="px-4 py-3">Reference</th>
                                         <th className="px-4 py-3">Date</th>
                                     </tr>
@@ -185,6 +203,10 @@ export default function Payouts() {
                                                 {p.method || "—"}
                                             </td>
 
+                                            <td className="px-4 py-3 align-top">
+                                                <PayoutStatus status={p.status} />
+                                            </td>
+
                                             <td className="px-4 py-3 align-top text-gray-700">
                                                 <div className="max-w-[240px] break-words">
                                                     {p.reference || "—"}
@@ -201,7 +223,7 @@ export default function Payouts() {
                                         <tr>
                                             <td
                                                 className="px-4 py-8 text-center text-sm text-gray-500"
-                                                colSpan={5}
+                                                colSpan={6}
                                             >
                                                 No payouts yet.
                                             </td>
@@ -242,6 +264,11 @@ export default function Payouts() {
 
                                     <div className="space-y-2 border-t border-gray-100 pt-3">
                                         <MobileInfoRow
+                                            label="Status"
+                                            value={p.status || "—"}
+                                        />
+
+                                        <MobileInfoRow
                                             label="Reference"
                                             value={p.reference || "—"}
                                         />
@@ -266,6 +293,20 @@ export default function Payouts() {
                 )}
             </div>
         </div>
+    );
+}
+
+function PayoutStatus({ status }) {
+    const paid = status === "PAID";
+    return (
+        <span
+            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${paid
+                ? "bg-green-100 text-green-700"
+                : "bg-amber-100 text-amber-700"
+                }`}
+        >
+            {status || "UNKNOWN"}
+        </span>
     );
 }
 

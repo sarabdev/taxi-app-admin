@@ -50,7 +50,7 @@ export default function Coupons() {
                         ? undefined
                         : Number(form.usageLimit),
                 expiresAt: form.expiresAt
-                    ? new Date(form.expiresAt).toISOString()
+                    ? new Date(`${form.expiresAt}T23:59:59.999`).toISOString()
                     : undefined,
             };
 
@@ -133,6 +133,8 @@ export default function Coupons() {
                         className="input-field"
                         type="number"
                         step="0.01"
+                        min="0"
+                        max={form.type === "PERCENTAGE" ? "100" : undefined}
                         placeholder="Value"
                         value={form.value}
                         onChange={(e) =>
@@ -145,6 +147,7 @@ export default function Coupons() {
                         className="input-field"
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="Min Amount (optional)"
                         value={form.minAmount}
                         onChange={(e) =>
@@ -156,6 +159,7 @@ export default function Coupons() {
                         className="input-field"
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="Max Discount cap (optional)"
                         value={form.maxDiscount}
                         onChange={(e) =>
@@ -169,6 +173,8 @@ export default function Coupons() {
                     <input
                         className="input-field"
                         type="number"
+                        min="1"
+                        step="1"
                         placeholder="Usage Limit (optional)"
                         value={form.usageLimit}
                         onChange={(e) =>
@@ -222,6 +228,8 @@ export default function Coupons() {
                                 <th className="px-4 py-3">Value</th>
                                 <th className="px-4 py-3">Min</th>
                                 <th className="px-4 py-3">Max</th>
+                                <th className="px-4 py-3">Usage</th>
+                                <th className="px-4 py-3">Expires</th>
                                 <th className="px-4 py-3">Active</th>
                                 <th className="px-4 py-3 text-right">Actions</th>
                             </tr>
@@ -250,11 +258,24 @@ export default function Coupons() {
                                     </td>
 
                                     <td className="whitespace-nowrap px-4 py-3 align-top text-gray-700">
-                                        {c.minAmount ?? "—"}
+                                        £{Number(c.minAmount || 0).toFixed(2)}
                                     </td>
 
                                     <td className="whitespace-nowrap px-4 py-3 align-top text-gray-700">
-                                        {c.maxDiscount ?? "—"}
+                                        {c.maxDiscount == null
+                                            ? "—"
+                                            : `£${Number(c.maxDiscount).toFixed(2)}`}
+                                    </td>
+
+                                    <td className="whitespace-nowrap px-4 py-3 align-top text-gray-700">
+                                        {c.usedCount || 0}
+                                        {c.usageLimit == null
+                                            ? " / Unlimited"
+                                            : ` / ${c.usageLimit}`}
+                                    </td>
+
+                                    <td className="whitespace-nowrap px-4 py-3 align-top text-gray-700">
+                                        {formatExpiry(c.expiresAt)}
                                     </td>
 
                                     <td className="px-4 py-3 align-top">
@@ -294,7 +315,7 @@ export default function Coupons() {
                                 <tr>
                                     <td
                                         className="px-4 py-8 text-center text-sm text-gray-500"
-                                        colSpan={7}
+                                        colSpan={9}
                                     >
                                         No coupons yet.
                                     </td>
@@ -344,12 +365,26 @@ export default function Coupons() {
 
                                 <MobileInfoRow
                                     label="Min Amount"
-                                    value={c.minAmount ?? "—"}
+                                    value={`£${Number(c.minAmount || 0).toFixed(2)}`}
                                 />
 
                                 <MobileInfoRow
                                     label="Max Discount"
-                                    value={c.maxDiscount ?? "—"}
+                                    value={
+                                        c.maxDiscount == null
+                                            ? "—"
+                                            : `£${Number(c.maxDiscount).toFixed(2)}`
+                                    }
+                                />
+
+                                <MobileInfoRow
+                                    label="Usage"
+                                    value={`${c.usedCount || 0} / ${c.usageLimit ?? "Unlimited"}`}
+                                />
+
+                                <MobileInfoRow
+                                    label="Expires"
+                                    value={formatExpiry(c.expiresAt)}
                                 />
                             </div>
 
@@ -380,6 +415,11 @@ export default function Coupons() {
             </div>
         </div>
     );
+}
+
+function formatExpiry(value) {
+    if (!value) return "No expiry";
+    return new Date(value).toLocaleDateString();
 }
 
 function MobileInfoRow({ label, value }) {

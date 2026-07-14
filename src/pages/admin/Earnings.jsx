@@ -52,10 +52,15 @@ export default function Earnings() {
 
             {/* ================= ADMIN EARNINGS ================= */}
             {admin && (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
                     <EarningCard
-                        label="Gross Revenue"
+                        label="Recognized Revenue"
                         value={`£${Number(admin.grossRevenue || 0).toFixed(2)}`}
+                    />
+
+                    <EarningCard
+                        label="Driver Earnings (80%)"
+                        value={`£${Number(admin.driverEarnings || 0).toFixed(2)}`}
                     />
 
                     <EarningCard
@@ -65,11 +70,25 @@ export default function Earnings() {
                     />
 
                     <EarningCard
-                        label="Platform Earnings"
+                        label="Platform Share (20%)"
                         value={`£${Number(admin.platformEarning || 0).toFixed(2)}`}
                         highlight
                         valueClassName="text-green-700"
                     />
+
+                    <EarningCard
+                        label="Pending Payouts"
+                        value={`£${Number(admin.pendingPayouts || 0).toFixed(2)}`}
+                        valueClassName="text-amber-600"
+                    />
+
+                    {Number(admin.unallocatedDriverEarnings || 0) > 0 && (
+                        <EarningCard
+                            label="Unallocated Driver Earnings"
+                            value={`£${Number(admin.unallocatedDriverEarnings).toFixed(2)}`}
+                            valueClassName="text-red-600"
+                        />
+                    )}
                 </div>
             )}
 

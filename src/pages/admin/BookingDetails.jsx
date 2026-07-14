@@ -124,12 +124,16 @@ export default function BookingDetails() {
                     />
 
                     <InfoItem
-                        label="Pickup Date & Time"
+                        label="Booked For (Pickup Date & Time)"
                         value={formatDateTime(
                             booking.pickupDate,
-                            booking.pickupTime,
-                            booking.createdAt
+                            booking.pickupTime
                         )}
+                    />
+
+                    <InfoItem
+                        label="Query Received"
+                        value={formatReceivedAt(booking.createdAt)}
                     />
 
                     <InfoItem
@@ -173,10 +177,6 @@ export default function BookingDetails() {
                         value={booking.carId?.name || "—"}
                     />
 
-                    <InfoItem
-                        label="Created"
-                        value={new Date(booking.createdAt).toLocaleString()}
-                    />
                 </div>
             </div>
 
@@ -188,22 +188,36 @@ export default function BookingDetails() {
 
                 <ul className="space-y-2 text-sm">
                     <FareRow
-                        label="Base fare"
+                        label="Base price per leg"
+                        value={`£${Number(p.basePrice || 0).toFixed(2)}`}
+                    />
+
+                    <FareRow
+                        label="Outbound fare"
                         value={`£${Number(p.baseFare || 0).toFixed(2)}`}
                     />
 
                     <FareRow
-                        label="Distance"
+                        label="Outbound distance rate"
                         value={`${Number(p.distanceMiles || 0).toFixed(2)} miles × £${Number(
                             p.pricePerMile || 0
                         ).toFixed(2)}`}
                     />
 
                     {booking.isReturnTrip && (
-                        <FareRow
-                            label="Return distance"
-                            value={`${Number(p.returnDistanceMiles || 0).toFixed(2)} miles`}
-                        />
+                        <>
+                            <FareRow
+                                label="Return fare"
+                                value={`£${Number(p.returnBaseFare || 0).toFixed(2)}`}
+                            />
+
+                            <FareRow
+                                label="Return distance rate"
+                                value={`${Number(p.returnDistanceMiles || 0).toFixed(2)} miles × £${Number(
+                                    p.returnPricePerMile || p.pricePerMile || 0
+                                ).toFixed(2)}`}
+                            />
+                        </>
                     )}
 
                     <FareRow
@@ -300,14 +314,18 @@ function InfoItem({ label, value }) {
 /* ─────────────────────────────
  * Reusable fare row
  * ───────────────────────────── */
-function formatDateTime(date, time, fallback) {
+function formatDateTime(date, time) {
     if (date && time) {
         return `${new Date(`${date}T${time}`).toLocaleDateString()} ${time}`;
     }
 
     if (date) return date;
 
-    return fallback ? new Date(fallback).toLocaleString() : "—";
+    return "—";
+}
+
+function formatReceivedAt(value) {
+    return value ? new Date(value).toLocaleString() : "—";
 }
 
 function formatStoredDateTime(value) {

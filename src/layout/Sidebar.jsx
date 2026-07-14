@@ -1,10 +1,19 @@
 import { NavLink } from "react-router-dom";
+import airportLogo from "../assets/my-airport-logo.png";
 
 export default function Sidebar({ title, menu }) {
     return (
         <aside className="hidden h-screen w-64 shrink-0 border-r border-gray-200 bg-white p-4 lg:sticky lg:top-0 lg:block lg:p-6">
             <div className="flex h-full flex-col">
                 <div className="mb-6">
+                    <div className="mb-2 flex h-16 w-24 items-center justify-center overflow-hidden">
+                        <img
+                            src={airportLogo}
+                            alt="Taxi service logo"
+                            className="h-full w-full scale-[1.65] object-contain"
+                        />
+                    </div>
+
                     <h2 className="break-words text-lg font-bold leading-tight text-gray-900 xl:text-xl">
                         {title}
                     </h2>

@@ -60,7 +60,7 @@ export default function AdminDashboard() {
             {/* KPI Grid */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3 xl:gap-6">
                 <StatBox
-                    title="Bookings Today"
+                    title="Queries Received Today"
                     value={stats.bookingsToday}
                 />
 
@@ -75,7 +75,7 @@ export default function AdminDashboard() {
                 />
 
                 <StatBox
-                    title="Total Revenue"
+                    title="Recognized Revenue"
                     value={`£${stats.totalRevenue.toFixed(2)}`}
                     highlight
                 />
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
                 />
 
                 <StatBox
-                    title="Admin Earnings"
+                    title="Platform Share (20%)"
                     value={`£${stats.adminEarnings.toFixed(2)}`}
                     highlight
                 />
@@ -96,6 +96,14 @@ export default function AdminDashboard() {
                     value={`£${stats.pendingPayouts.toFixed(2)}`}
                     warning
                 />
+
+                {Number(stats.unallocatedDriverEarnings || 0) > 0 && (
+                    <StatBox
+                        title="Unallocated Driver Earnings"
+                        value={`£${Number(stats.unallocatedDriverEarnings).toFixed(2)}`}
+                        warning
+                    />
+                )}
             </div>
         </div>
     );

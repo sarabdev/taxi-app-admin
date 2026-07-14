@@ -60,7 +60,7 @@ export default function Dashboard() {
             {/* Booking Stats */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <Stat
-                    label="Bookings Today"
+                    label="Queries Received Today"
                     value={data.bookingsToday}
                 />
 
@@ -80,7 +80,7 @@ export default function Dashboard() {
             {/* Revenue Stats */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <Stat
-                    label="Total Revenue"
+                    label="Recognized Revenue"
                     value={`£${Number(data.totalRevenue || 0).toFixed(2)}`}
                     highlight
                 />

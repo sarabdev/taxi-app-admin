@@ -1,4 +1,5 @@
 import { useAuth } from "../auth/AuthContext";
+import airportLogo from "../assets/my-airport-logo.png";
 
 export default function Header({ onMenuClick }) {
     const { user, logout } = useAuth();
@@ -18,6 +19,14 @@ export default function Header({ onMenuClick }) {
                         ☰
                     </button>
                 )}
+
+                <div className="flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden lg:hidden">
+                    <img
+                        src={airportLogo}
+                        alt="Taxi service logo"
+                        className="h-full w-full scale-[1.65] object-contain"
+                    />
+                </div>
 
                 <div className="min-w-0">
                     <p className="text-xs text-gray-500 sm:text-sm">

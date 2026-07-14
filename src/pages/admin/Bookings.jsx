@@ -72,11 +72,12 @@ export default function Bookings() {
 
             {/* Desktop / Tablet Table */}
             <div className="hidden overflow-x-auto rounded-xl border border-gray-100 bg-white md:block">
-                <table className="w-full min-w-[850px] text-sm">
+                <table className="w-full min-w-[980px] text-sm">
                     <thead className="border-b bg-gray-50">
                         <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                             <th className="px-4 py-3">Route</th>
-                            <th className="px-4 py-3">Date</th>
+                            <th className="px-4 py-3">Query Received</th>
+                            <th className="px-4 py-3">Booked For</th>
                             <th className="px-4 py-3">Status</th>
                             <th className="px-4 py-3">Driver</th>
                             <th className="px-4 py-3">Total</th>
@@ -117,9 +118,14 @@ export default function Bookings() {
                                     </div>
                                 </td>
 
-                                {/* Date */}
+                                {/* Booking received */}
                                 <td className="whitespace-nowrap px-4 py-3 align-top text-gray-700">
-                                    {formatDateTime(b.pickupDate, b.pickupTime, b.createdAt)}
+                                    {formatReceivedAt(b.createdAt)}
+                                </td>
+
+                                {/* Journey date */}
+                                <td className="whitespace-nowrap px-4 py-3 align-top text-gray-700">
+                                    {formatDateTime(b.pickupDate, b.pickupTime)}
                                     {b.isReturnTrip && b.returnTrip?.pickupDate && (
                                         <div className="mt-1 text-xs text-gray-500">
                                             Return: {formatDateTime(
@@ -134,7 +140,10 @@ export default function Bookings() {
                                 <td className="px-4 py-3 align-top">
                                     <select
                                         value={b.status}
-                                        disabled={updatingStatusId === b._id}
+                                        disabled={
+                                            updatingStatusId === b._id ||
+                                            b.status === "COMPLETED"
+                                        }
                                         onChange={(e) =>
                                             handleStatusChange(b, e.target.value)
                                         }
@@ -250,8 +259,13 @@ export default function Bookings() {
 
                         <div className="grid grid-cols-1 gap-3 border-t border-gray-100 pt-3">
                             <MobileInfoRow
-                                label="Date"
-                                value={formatDateTime(b.pickupDate, b.pickupTime, b.createdAt)}
+                                label="Query Received"
+                                value={formatReceivedAt(b.createdAt)}
+                            />
+
+                            <MobileInfoRow
+                                label="Booked For"
+                                value={formatDateTime(b.pickupDate, b.pickupTime)}
                             />
 
                             {b.isReturnTrip && b.returnTrip?.pickupDate && (
@@ -271,7 +285,10 @@ export default function Bookings() {
 
                                 <select
                                     value={b.status}
-                                    disabled={updatingStatusId === b._id}
+                                    disabled={
+                                        updatingStatusId === b._id ||
+                                        b.status === "COMPLETED"
+                                    }
                                     onChange={(e) =>
                                         handleStatusChange(b, e.target.value)
                                     }
@@ -392,12 +409,16 @@ function MobileInfoRow({ label, value }) {
     );
 }
 
-function formatDateTime(date, time, fallback) {
+function formatDateTime(date, time) {
     if (date && time) {
         return `${new Date(`${date}T${time}`).toLocaleDateString()} ${time}`;
     }
 
     if (date) return date;
 
-    return fallback ? new Date(fallback).toLocaleDateString() : "—";
+    return "—";
+}
+
+function formatReceivedAt(value) {
+    return value ? new Date(value).toLocaleString() : "—";
 }

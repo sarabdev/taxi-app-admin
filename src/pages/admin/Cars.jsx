@@ -10,7 +10,14 @@ const emptyCar = {
     airportRates: {},
     features: [],
     description: "",
-    discounts: [],
+    discounts: [
+        {
+            type: "PERCENTAGE",
+            value: 10,
+            condition: "RETURN_TRIP",
+            isActive: true,
+        },
+    ],
 };
 
 const UK_CITIES = [
@@ -36,7 +43,7 @@ const UK_CITIES = [
     { name: "Cambridge", code: "CAM", placeId: "ChIJLQEq84FD2EcRIT1eo-Ego2M" },
 ];
 
-const DEFAULT_PRICE_PER_HOUR = 3;
+const DEFAULT_PRICE_PER_MILE = 3;
 
 function normalizeNumber(v, fallback = 0) {
     const n = Number(v);
@@ -65,7 +72,7 @@ export default function Cars() {
         setForm({
             ...emptyCar,
             airportRates: UK_CITIES.reduce((acc, city) => {
-                acc[city.code] = { pricePerMile: DEFAULT_PRICE_PER_HOUR };
+                acc[city.code] = { pricePerMile: DEFAULT_PRICE_PER_MILE };
                 return acc;
             }, {}),
         });
@@ -80,7 +87,7 @@ export default function Cars() {
             acc[city.code] = {
                 pricePerMile:
                     car.airportRates?.[city.code]?.pricePerMile ??
-                    DEFAULT_PRICE_PER_HOUR,
+                    DEFAULT_PRICE_PER_MILE,
             };
             return acc;
         }, {});
@@ -465,6 +472,7 @@ export default function Cars() {
                                             className="input-field w-full md:max-w-[240px]"
                                             type="number"
                                             step="0.01"
+                                            min="0"
                                             placeholder="£"
                                             value={form.basePrice}
                                             onChange={(e) =>
@@ -515,7 +523,7 @@ export default function Cars() {
                                     <div className="rounded-xl border border-gray-200 p-4 md:col-span-2">
                                         <div className="mb-4">
                                             <h3 className="font-semibold text-gray-900">
-                                                Price Per Hour by City
+                                                Price Per Mile by City
                                             </h3>
 
                                             <p className="mt-1 text-xs text-gray-500">
@@ -533,8 +541,9 @@ export default function Cars() {
                                                     <input
                                                         type="number"
                                                         step="0.01"
+                                                        min="0.01"
                                                         className="input-field"
-                                                        placeholder="£ per hour"
+                                                        placeholder="£ per mile"
                                                         value={
                                                             form.airportRates?.[city.code]
                                                                 ?.pricePerMile ?? ""
@@ -659,6 +668,15 @@ export default function Cars() {
                                             className="input-field"
                                             type="number"
                                             step="0.01"
+                                            min="0"
+                                            max={
+                                                (form.discounts || []).find(
+                                                    (d) =>
+                                                        d.condition === "RETURN_TRIP"
+                                                )?.type === "PERCENTAGE"
+                                                    ? 100
+                                                    : undefined
+                                            }
                                             value={
                                                 (form.discounts || []).find(
                                                     (d) =>
