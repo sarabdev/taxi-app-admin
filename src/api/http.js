@@ -28,6 +28,12 @@ export async function http(path, options = {}) {
     },
   });
 
+  if (res.status === 401 && token) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.dispatchEvent(new Event("auth:unauthorized"));
+  }
+
   if (!res.ok) {
     const err = await res
       .json()
