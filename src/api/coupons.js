@@ -5,6 +5,12 @@ export const fetchCoupons = () => http("/api/coupons");
 export const createCoupon = (payload) =>
   http("/api/coupons", { method: "POST", body: JSON.stringify(payload) });
 
+export const updateCoupon = (id, payload) =>
+  http(`/api/coupons/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+
 export const toggleCoupon = (id) =>
   http(`/api/coupons/${id}/toggle`, { method: "PATCH" });
 

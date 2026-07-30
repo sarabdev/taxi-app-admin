@@ -4,6 +4,7 @@ import {
     deleteCoupon,
     fetchCoupons,
     toggleCoupon,
+    updateCoupon,
 } from "../../api/coupons";
 
 const empty = {
@@ -20,6 +21,7 @@ const empty = {
 export default function Coupons() {
     const [coupons, setCoupons] = useState([]);
     const [form, setForm] = useState(empty);
+    const [editingId, setEditingId] = useState(null);
     const [error, setError] = useState("");
 
     async function load() {
@@ -54,8 +56,27 @@ export default function Coupons() {
                     : undefined,
             };
 
-            await createCoupon(payload);
+            if (editingId) {
+                await updateCoupon(editingId, {
+                    ...payload,
+                    maxDiscount:
+                        form.maxDiscount === ""
+                            ? null
+                            : Number(form.maxDiscount),
+                    usageLimit:
+                        form.usageLimit === ""
+                            ? null
+                            : Number(form.usageLimit),
+                    expiresAt: form.expiresAt
+                        ? payload.expiresAt
+                        : null,
+                });
+            } else {
+                await createCoupon(payload);
+            }
+
             setForm(empty);
+            setEditingId(null);
             await load();
         } catch (e) {
             setError(e.message);
@@ -70,7 +91,37 @@ export default function Coupons() {
     const onDelete = async (id) => {
         if (!confirm("Delete this coupon?")) return;
         await deleteCoupon(id);
+        if (editingId === id) {
+            setEditingId(null);
+            setForm(empty);
+        }
         await load();
+    };
+
+    const onEdit = (coupon) => {
+        setEditingId(coupon._id);
+        setForm({
+            code: coupon.code,
+            type: coupon.type,
+            value: coupon.value,
+            minAmount: coupon.minAmount ?? 0,
+            maxDiscount: coupon.maxDiscount ?? "",
+            usageLimit: coupon.usageLimit ?? "",
+            expiresAt: coupon.expiresAt
+                ? String(coupon.expiresAt).slice(0, 10)
+                : "",
+            isActive: coupon.isActive,
+        });
+        setError("");
+        document
+            .getElementById("coupon-form")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    const cancelEdit = () => {
+        setEditingId(null);
+        setForm(empty);
+        setError("");
     };
 
     return (
@@ -87,14 +138,16 @@ export default function Coupons() {
             </div>
 
             {/* Create Coupon */}
-            <div className="card">
+            <div id="coupon-form" className="card scroll-mt-4">
                 <div className="mb-4">
                     <h2 className="text-base font-semibold text-gray-900 sm:text-lg">
-                        Create Coupon
+                        {editingId ? "Edit Coupon" : "Create Coupon"}
                     </h2>
 
                     <p className="mt-1 text-sm text-gray-500">
-                        Add coupon details such as discount type, limits, and expiry date.
+                        {editingId
+                            ? "Update the discount type, value, limits, or expiry date."
+                            : "Add coupon details such as discount type, limits, and expiry date."}
                     </p>
                 </div>
 
@@ -112,8 +165,14 @@ export default function Coupons() {
                         className="input-field"
                         placeholder="CODE (e.g. SAVE10)"
                         value={form.code}
+                        disabled={Boolean(editingId)}
                         onChange={(e) =>
                             setForm((p) => ({ ...p, code: e.target.value }))
+                        }
+                        title={
+                            editingId
+                                ? "Coupon codes cannot be changed after creation"
+                                : undefined
                         }
                         required
                     />
@@ -197,12 +256,24 @@ export default function Coupons() {
                         }
                     />
 
-                    <button
-                        className="btn-primary w-full xl:w-auto"
-                        type="submit"
-                    >
-                        Create
-                    </button>
+                    <div className="flex w-full gap-2 xl:w-auto">
+                        <button
+                            className="btn-primary flex-1 xl:w-auto"
+                            type="submit"
+                        >
+                            {editingId ? "Update" : "Create"}
+                        </button>
+
+                        {editingId && (
+                            <button
+                                className="btn-secondary flex-1 xl:w-auto"
+                                type="button"
+                                onClick={cancelEdit}
+                            >
+                                Cancel
+                            </button>
+                        )}
+                    </div>
                 </form>
             </div>
 
@@ -291,6 +362,13 @@ export default function Coupons() {
 
                                     <td className="px-4 py-3 align-top text-right">
                                         <div className="flex flex-wrap items-center justify-end gap-3">
+                                            <button
+                                                className="text-sm font-medium text-gray-700 underline-offset-4 hover:underline"
+                                                onClick={() => onEdit(c)}
+                                            >
+                                                Edit
+                                            </button>
+
                                             <button
                                                 className="text-sm font-medium text-primary-600 underline-offset-4 hover:underline"
                                                 onClick={() => onToggle(c._id)}
@@ -389,6 +467,13 @@ export default function Coupons() {
                             </div>
 
                             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                                <button
+                                    className="btn-secondary w-full sm:flex-1"
+                                    onClick={() => onEdit(c)}
+                                >
+                                    Edit
+                                </button>
+
                                 <button
                                     className="btn-secondary w-full sm:flex-1"
                                     onClick={() => onToggle(c._id)}
