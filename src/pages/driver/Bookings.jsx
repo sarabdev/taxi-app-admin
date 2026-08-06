@@ -136,7 +136,19 @@ export default function DriverBookings() {
                                     label="Status"
                                     value={b.status}
                                 />
+
+                                <BookingInfo
+                                    label="Meet & Greet"
+                                    value={b.flight?.meetAndGreet ? "Yes" : "No"}
+                                    strong={b.flight?.meetAndGreet}
+                                />
                             </div>
+
+                            {b.flight?.meetAndGreet && (
+                                <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm font-semibold text-blue-800">
+                                    Meet the passenger inside the airport arrivals terminal.
+                                </div>
+                            )}
 
                             {/* Completion */}
                             {b.status === "ASSIGNED" && (

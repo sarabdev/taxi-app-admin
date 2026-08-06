@@ -17,6 +17,7 @@ import BookingDetails from "../pages/admin/BookingDetails";
 import Earnings from "../pages/admin/Earnings";
 import DriverLedger from "../pages/admin/DriverLedger";
 import Dashboard from "../pages/admin/Dashboard";
+import Settings from "../pages/admin/Settings";
 
 export default function AppRouter() {
     return (
@@ -169,6 +170,17 @@ export default function AppRouter() {
                     <ProtectedRoute role="ADMIN">
                         <AdminLayout>
                             <Cars />
+                        </AdminLayout>
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/admin/settings"
+                element={
+                    <ProtectedRoute role="ADMIN">
+                        <AdminLayout>
+                            <Settings />
                         </AdminLayout>
                     </ProtectedRoute>
                 }

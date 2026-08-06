@@ -6,6 +6,7 @@ export const adminMenu = [
   { label: "Coupons", path: "/admin/coupons" },
   { label: "Payouts", path: "/admin/payouts" },
   { label: "Earnings", path: "/admin/earnings" },
+  { label: "Settings", path: "/admin/settings" },
 ];
 
 export const driverMenu = [

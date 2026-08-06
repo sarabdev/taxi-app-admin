@@ -141,6 +141,11 @@ export default function BookingDetails() {
                         value={formatStoredDateTime(booking.flight?.arrivalDateTime)}
                     />
 
+                    <InfoItem
+                        label="Meet & Greet"
+                        value={booking.flight?.meetAndGreet ? "Selected" : "Not selected"}
+                    />
+
                     {booking.isReturnTrip && (
                         <>
                             <InfoItem
@@ -231,6 +236,13 @@ export default function BookingDetails() {
                         value={`−£${Number(p.couponDiscountAmount || 0).toFixed(2)}`}
                         valueClassName="text-green-600"
                     />
+
+                    {booking.flight?.meetAndGreet && (
+                        <FareRow
+                            label="Meet & Greet service"
+                            value={`£${Number(p.meetAndGreetFee || 0).toFixed(2)}`}
+                        />
+                    )}
 
                     <li className="flex items-center justify-between gap-4 border-t pt-3 font-bold">
                         <span>Total:</span>
