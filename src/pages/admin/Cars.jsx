@@ -7,6 +7,8 @@ const emptyCar = {
     image: "",
     capacity: { passengers: null, luggage: null },
     basePrice: null,
+    fixedPriceUpTo5Miles: null,
+    fixedPriceUpTo10Miles: null,
     airportRates: {},
     features: [],
     description: "",
@@ -48,6 +50,11 @@ const DEFAULT_PRICE_PER_MILE = 3;
 function normalizeNumber(v, fallback = 0) {
     const n = Number(v);
     return Number.isFinite(n) ? n : fallback;
+}
+
+function normalizeOptionalPrice(value) {
+    if (value === null || value === undefined || value === "") return null;
+    return normalizeNumber(value);
 }
 
 export default function Cars() {
@@ -95,6 +102,8 @@ export default function Cars() {
         setForm({
             ...car,
             airportRates: normalizedRates,
+            fixedPriceUpTo5Miles: car.fixedPriceUpTo5Miles ?? null,
+            fixedPriceUpTo10Miles: car.fixedPriceUpTo10Miles ?? null,
             capacity: car.capacity || { passengers: 4, luggage: 2 },
             features: car.features || [],
             discounts: car.discounts || [],
@@ -148,6 +157,12 @@ export default function Cars() {
             const payload = {
                 ...form,
                 basePrice: normalizeNumber(form.basePrice),
+                fixedPriceUpTo5Miles: normalizeOptionalPrice(
+                    form.fixedPriceUpTo5Miles
+                ),
+                fixedPriceUpTo10Miles: normalizeOptionalPrice(
+                    form.fixedPriceUpTo10Miles
+                ),
                 airportRates: Object.fromEntries(
                     Object.entries(form.airportRates || {}).map(([k, v]) => [
                         k,
@@ -204,7 +219,8 @@ export default function Cars() {
                                 <th className="px-4 py-3">Name</th>
                                 <th className="px-4 py-3">Type</th>
                                 <th className="px-4 py-3">Base Price</th>
-                                <th className="px-4 py-3">Per Hour Pricing</th>
+                                <th className="px-4 py-3">Fixed Fares</th>
+                                <th className="px-4 py-3">Per Mile Pricing</th>
                                 <th className="px-4 py-3">Return Discount</th>
                                 <th className="px-4 py-3 text-right">Actions</th>
                             </tr>
@@ -256,6 +272,19 @@ export default function Cars() {
                                             £{Number(c.basePrice || 0).toFixed(2)}
                                         </td>
 
+                                        <td className="whitespace-nowrap px-4 py-3 align-top text-xs text-gray-700">
+                                            <div>
+                                                1–5 mi: {c.fixedPriceUpTo5Miles == null
+                                                    ? "—"
+                                                    : `£${Number(c.fixedPriceUpTo5Miles).toFixed(2)}`}
+                                            </div>
+                                            <div className="mt-1">
+                                                5–10 mi: {c.fixedPriceUpTo10Miles == null
+                                                    ? "—"
+                                                    : `£${Number(c.fixedPriceUpTo10Miles).toFixed(2)}`}
+                                            </div>
+                                        </td>
+
                                         <td className="px-4 py-3 align-top">
                                             <span className="text-xs font-medium text-gray-700">
                                                 {rateLabel}
@@ -295,7 +324,7 @@ export default function Cars() {
                                 <tr>
                                     <td
                                         className="px-4 py-8 text-center text-sm text-gray-500"
-                                        colSpan={6}
+                                        colSpan={7}
                                     >
                                         No cars yet.
                                     </td>
@@ -358,7 +387,21 @@ export default function Cars() {
 
                                 <div className="space-y-2 border-t border-gray-100 pt-3">
                                     <MobileInfoRow
-                                        label="Per Hour"
+                                        label="1–5 miles"
+                                        value={c.fixedPriceUpTo5Miles == null
+                                            ? "—"
+                                            : `£${Number(c.fixedPriceUpTo5Miles).toFixed(2)}`}
+                                    />
+
+                                    <MobileInfoRow
+                                        label="5–10 miles"
+                                        value={c.fixedPriceUpTo10Miles == null
+                                            ? "—"
+                                            : `£${Number(c.fixedPriceUpTo10Miles).toFixed(2)}`}
+                                    />
+
+                                    <MobileInfoRow
+                                        label="Per Mile"
                                         value={rateLabel}
                                     />
 
@@ -483,6 +526,59 @@ export default function Cars() {
                                             }
                                             required
                                         />
+                                    </div>
+
+                                    <div className="rounded-xl border border-gray-200 p-4 md:col-span-2">
+                                        <div className="mb-4">
+                                            <h3 className="font-semibold text-gray-900">
+                                                Fixed Short-Distance Fares
+                                            </h3>
+                                            <p className="mt-1 text-xs text-gray-500">
+                                                Applied per journey leg. Above 10 miles, the base price and city per-mile rate are used.
+                                            </p>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                            <div>
+                                                <label className="mb-1 block text-sm font-medium text-gray-700">
+                                                    Up to 5 miles
+                                                </label>
+                                                <input
+                                                    className="input-field"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    placeholder="£ fixed fare"
+                                                    value={form.fixedPriceUpTo5Miles ?? ""}
+                                                    onChange={(e) =>
+                                                        setForm((p) => ({
+                                                            ...p,
+                                                            fixedPriceUpTo5Miles: e.target.value,
+                                                        }))
+                                                    }
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="mb-1 block text-sm font-medium text-gray-700">
+                                                    Over 5 up to 10 miles
+                                                </label>
+                                                <input
+                                                    className="input-field"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    placeholder="£ fixed fare"
+                                                    value={form.fixedPriceUpTo10Miles ?? ""}
+                                                    onChange={(e) =>
+                                                        setForm((p) => ({
+                                                            ...p,
+                                                            fixedPriceUpTo10Miles: e.target.value,
+                                                        }))
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:col-span-2">
