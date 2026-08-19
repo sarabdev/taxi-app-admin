@@ -3,6 +3,7 @@ export const adminMenu = [
   { label: "Bookings", path: "/admin/bookings" },
   { label: "Drivers", path: "/admin/drivers" },
   { label: "Cars", path: "/admin/cars" },
+  { label: "Fare Calculation", path: "/admin/fare-calculation" },
   { label: "Coupons", path: "/admin/coupons" },
   { label: "Payouts", path: "/admin/payouts" },
   { label: "Earnings", path: "/admin/earnings" },

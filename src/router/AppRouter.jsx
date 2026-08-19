@@ -18,6 +18,7 @@ import Earnings from "../pages/admin/Earnings";
 import DriverLedger from "../pages/admin/DriverLedger";
 import Dashboard from "../pages/admin/Dashboard";
 import Settings from "../pages/admin/Settings";
+import FareCalculation from "../pages/admin/FareCalculation";
 
 export default function AppRouter() {
     return (
@@ -170,6 +171,17 @@ export default function AppRouter() {
                     <ProtectedRoute role="ADMIN">
                         <AdminLayout>
                             <Cars />
+                        </AdminLayout>
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/admin/fare-calculation"
+                element={
+                    <ProtectedRoute role="ADMIN">
+                        <AdminLayout>
+                            <FareCalculation />
                         </AdminLayout>
                     </ProtectedRoute>
                 }
