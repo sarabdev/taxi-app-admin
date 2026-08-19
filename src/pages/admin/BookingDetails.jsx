@@ -244,6 +244,13 @@ export default function BookingDetails() {
                         />
                     )}
 
+                    {Number(p.airportPickupFee || 0) > 0 && (
+                        <FareRow
+                            label="Airport pickup fee"
+                            value={`£${Number(p.airportPickupFee).toFixed(2)}`}
+                        />
+                    )}
+
                     <li className="flex items-center justify-between gap-4 border-t pt-3 font-bold">
                         <span>Total:</span>
                         <span className="text-right text-primary-600">

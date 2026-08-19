@@ -7,9 +7,7 @@ const emptyCar = {
     image: "",
     capacity: { passengers: null, luggage: null },
     basePrice: null,
-    fixedPriceUpTo5Miles: null,
-    fixedPriceUpTo10Miles: null,
-    airportRates: {},
+    airportPricing: {},
     features: [],
     description: "",
     discounts: [
@@ -22,39 +20,57 @@ const emptyCar = {
     ],
 };
 
-const UK_CITIES = [
-    { name: "London", code: "LON", placeId: "ChIJdd4hrwug2EcRmSrV3Vo6llI" },
-    { name: "Manchester", code: "MAN", placeId: "ChIJ2_UmUkxNekgRqmv-BDgUvtk" },
-    { name: "Birmingham", code: "BHM", placeId: "ChIJc3FtQmuUcEgRmHnurvD-gco" },
-    { name: "Edinburgh", code: "EDI", placeId: "ChIJIyaYpQC4h0gRJxfnfHsU8mQ" },
-    { name: "Glasgow", code: "GLA", placeId: "ChIJ685WIFYViEgRHlHvBbiD5nE" },
-    { name: "Leeds", code: "LDS", placeId: "ChIJ-3bkCCmxeUgRBPgPm7BH15o" },
-    { name: "Liverpool", code: "LPL", placeId: "ChIJt2BnBiMoek gRhFzMELZVMqE" },
-    { name: "Bristol", code: "BST", placeId: "ChIJYdizgWuFbkgRQMOb9-eFpMc" },
-    { name: "Sheffield", code: "SHF", placeId: "ChIJ-RQpgzOFe0gRJxk_YhzmBpk" },
-    { name: "Newcastle", code: "NCL", placeId: "ChIJyUNFDmH5fkgRTAZQMN3ELOI" },
-    { name: "Nottingham", code: "NGM", placeId: "ChIJuYOOULgDeUgRiEO9_Phu6xg" },
-    { name: "Leicester", code: "LCE", placeId: "ChIJwWuJH4SaeUgRJoJyGksMaOQ" },
-    { name: "Coventry", code: "CVT", placeId: "ChIJu1PkfYAEd0gRdstc29cUoKY" },
-    { name: "Bradford", code: "BFD", placeId: "ChIJz4lMEMtxeUgRe3nSXXq8Daw" },
-    { name: "Cardiff", code: "CDF", placeId: "ChIJ9VgJdb-fbkgRDplI5hnBMSo" },
-    { name: "Belfast", code: "BFS", placeId: "ChIJG6kSYNcNYEgRZ00VxYzXmR4" },
-    { name: "Southampton", code: "SOU", placeId: "ChIJd3TmZhpQdEgRfMhF0KuxIj8" },
-    { name: "Portsmouth", code: "POR", placeId: "ChIJ1RP4COJP1EIRFDplI5hnBMs" },
-    { name: "Oxford", code: "OXF", placeId: "ChIJrx_KCcZjdkgRPQ0WS1jg8iM" },
-    { name: "Cambridge", code: "CAM", placeId: "ChIJLQEq84FD2EcRIT1eo-Ego2M" },
+const AIRPORTS = [
+    { name: "Edinburgh Airport", code: "EDI" },
+    { name: "Glasgow Airport", code: "GLA" },
 ];
 
 const DEFAULT_PRICE_PER_MILE = 3;
+const defaultBands = () => [
+    { upToMiles: 10, pricePerMile: DEFAULT_PRICE_PER_MILE },
+    { upToMiles: null, pricePerMile: DEFAULT_PRICE_PER_MILE },
+];
+
+function defaultAirportPricing() {
+    return Object.fromEntries(
+        AIRPORTS.map((airport) => [airport.code, { bands: defaultBands() }])
+    );
+}
 
 function normalizeNumber(v, fallback = 0) {
     const n = Number(v);
     return Number.isFinite(n) ? n : fallback;
 }
 
-function normalizeOptionalPrice(value) {
-    if (value === null || value === undefined || value === "") return null;
-    return normalizeNumber(value);
+function normalizeAirportPricing(pricing) {
+    return Object.fromEntries(
+        AIRPORTS.map((airport) => {
+            const sourceBands = pricing?.[airport.code]?.bands;
+            const bands = Array.isArray(sourceBands) && sourceBands.length
+                ? sourceBands.map((band) => ({
+                    upToMiles:
+                        band.upToMiles === null || band.upToMiles === ""
+                            ? null
+                            : normalizeNumber(band.upToMiles),
+                    pricePerMile: normalizeNumber(band.pricePerMile),
+                }))
+                : defaultBands();
+            return [airport.code, { bands }];
+        })
+    );
+}
+
+function allBandRates(car) {
+    return AIRPORTS.flatMap((airport) =>
+        (car.airportPricing?.[airport.code]?.bands || []).map((band) =>
+            Number(band.pricePerMile)
+        )
+    ).filter((rate) => Number.isFinite(rate) && rate > 0);
+}
+
+function bandSummary(car, code) {
+    const count = car.airportPricing?.[code]?.bands?.length || 0;
+    return count ? `${count} band${count === 1 ? "" : "s"}` : "—";
 }
 
 export default function Cars() {
@@ -78,10 +94,7 @@ export default function Cars() {
         setMode("create");
         setForm({
             ...emptyCar,
-            airportRates: UK_CITIES.reduce((acc, city) => {
-                acc[city.code] = { pricePerMile: DEFAULT_PRICE_PER_MILE };
-                return acc;
-            }, {}),
+            airportPricing: defaultAirportPricing(),
         });
         setError("");
         setOpen(true);
@@ -90,20 +103,9 @@ export default function Cars() {
     const onEdit = (car) => {
         setMode("edit");
 
-        const normalizedRates = UK_CITIES.reduce((acc, city) => {
-            acc[city.code] = {
-                pricePerMile:
-                    car.airportRates?.[city.code]?.pricePerMile ??
-                    DEFAULT_PRICE_PER_MILE,
-            };
-            return acc;
-        }, {});
-
         setForm({
             ...car,
-            airportRates: normalizedRates,
-            fixedPriceUpTo5Miles: car.fixedPriceUpTo5Miles ?? null,
-            fixedPriceUpTo10Miles: car.fixedPriceUpTo10Miles ?? null,
+            airportPricing: normalizeAirportPricing(car.airportPricing),
             capacity: car.capacity || { passengers: 4, luggage: 2 },
             features: car.features || [],
             discounts: car.discounts || [],
@@ -124,6 +126,54 @@ export default function Cars() {
         setForm((p) => ({
             ...p,
             features: p.features.filter((_, i) => i !== idx),
+        }));
+    };
+
+    const updateBand = (airportCode, index, patch) => {
+        setForm((previous) => {
+            const bands = [...previous.airportPricing[airportCode].bands];
+            bands[index] = { ...bands[index], ...patch };
+            return {
+                ...previous,
+                airportPricing: {
+                    ...previous.airportPricing,
+                    [airportCode]: { bands },
+                },
+            };
+        });
+    };
+
+    const addBand = (airportCode) => {
+        setForm((previous) => {
+            const bands = [...previous.airportPricing[airportCode].bands];
+            const unlimitedIndex = bands.findIndex((band) => band.upToMiles == null);
+            const insertAt = unlimitedIndex === -1 ? bands.length : unlimitedIndex;
+            const previousLimit = insertAt > 0 ? Number(bands[insertAt - 1].upToMiles) : 0;
+            bands.splice(insertAt, 0, {
+                upToMiles: previousLimit + 10,
+                pricePerMile: DEFAULT_PRICE_PER_MILE,
+            });
+            return {
+                ...previous,
+                airportPricing: {
+                    ...previous.airportPricing,
+                    [airportCode]: { bands },
+                },
+            };
+        });
+    };
+
+    const removeBand = (airportCode, index) => {
+        setForm((previous) => ({
+            ...previous,
+            airportPricing: {
+                ...previous.airportPricing,
+                [airportCode]: {
+                    bands: previous.airportPricing[airportCode].bands.filter(
+                        (_, bandIndex) => bandIndex !== index
+                    ),
+                },
+            },
         }));
     };
 
@@ -157,18 +207,7 @@ export default function Cars() {
             const payload = {
                 ...form,
                 basePrice: normalizeNumber(form.basePrice),
-                fixedPriceUpTo5Miles: normalizeOptionalPrice(
-                    form.fixedPriceUpTo5Miles
-                ),
-                fixedPriceUpTo10Miles: normalizeOptionalPrice(
-                    form.fixedPriceUpTo10Miles
-                ),
-                airportRates: Object.fromEntries(
-                    Object.entries(form.airportRates || {}).map(([k, v]) => [
-                        k,
-                        { pricePerMile: normalizeNumber(v.pricePerMile) },
-                    ])
-                ),
+                airportPricing: normalizeAirportPricing(form.airportPricing),
                 capacity: {
                     passengers: normalizeNumber(form.capacity?.passengers, 0),
                     luggage: normalizeNumber(form.capacity?.luggage, 0),
@@ -201,7 +240,7 @@ export default function Cars() {
                     </h1>
 
                     <p className="mt-1 text-sm text-gray-500">
-                        Manage car types, city pricing, capacity, features, and discounts.
+                        Manage car types, airport distance bands, capacity, features, and discounts.
                     </p>
                 </div>
 
@@ -219,8 +258,8 @@ export default function Cars() {
                                 <th className="px-4 py-3">Name</th>
                                 <th className="px-4 py-3">Type</th>
                                 <th className="px-4 py-3">Base Price</th>
-                                <th className="px-4 py-3">Fixed Fares</th>
-                                <th className="px-4 py-3">Per Mile Pricing</th>
+                                <th className="px-4 py-3">Airport Bands</th>
+                                <th className="px-4 py-3">Per-Mile Range</th>
                                 <th className="px-4 py-3">Return Discount</th>
                                 <th className="px-4 py-3 text-right">Actions</th>
                             </tr>
@@ -240,9 +279,7 @@ export default function Cars() {
                                         : `£${rd.value}`
                                     : "—";
 
-                                const rates = Object.values(c.airportRates || {})
-                                    .map((r) => Number(r.pricePerMile))
-                                    .filter(Boolean);
+                                const rates = allBandRates(c);
 
                                 const rateLabel =
                                     rates.length > 0
@@ -274,14 +311,10 @@ export default function Cars() {
 
                                         <td className="whitespace-nowrap px-4 py-3 align-top text-xs text-gray-700">
                                             <div>
-                                                1–5 mi: {c.fixedPriceUpTo5Miles == null
-                                                    ? "—"
-                                                    : `£${Number(c.fixedPriceUpTo5Miles).toFixed(2)}`}
+                                                Edinburgh: {bandSummary(c, "EDI")}
                                             </div>
                                             <div className="mt-1">
-                                                5–10 mi: {c.fixedPriceUpTo10Miles == null
-                                                    ? "—"
-                                                    : `£${Number(c.fixedPriceUpTo10Miles).toFixed(2)}`}
+                                                Glasgow: {bandSummary(c, "GLA")}
                                             </div>
                                         </td>
 
@@ -291,7 +324,7 @@ export default function Cars() {
                                             </span>
 
                                             <div className="text-[10px] uppercase tracking-wide text-gray-400">
-                                                city based
+                                                airport bands
                                             </div>
                                         </td>
 
@@ -347,9 +380,7 @@ export default function Cars() {
                                 : `£${rd.value}`
                             : "—";
 
-                        const rates = Object.values(c.airportRates || {})
-                            .map((r) => Number(r.pricePerMile))
-                            .filter(Boolean);
+                        const rates = allBandRates(c);
 
                         const rateLabel =
                             rates.length > 0
@@ -387,17 +418,13 @@ export default function Cars() {
 
                                 <div className="space-y-2 border-t border-gray-100 pt-3">
                                     <MobileInfoRow
-                                        label="1–5 miles"
-                                        value={c.fixedPriceUpTo5Miles == null
-                                            ? "—"
-                                            : `£${Number(c.fixedPriceUpTo5Miles).toFixed(2)}`}
+                                        label="Edinburgh"
+                                        value={bandSummary(c, "EDI")}
                                     />
 
                                     <MobileInfoRow
-                                        label="5–10 miles"
-                                        value={c.fixedPriceUpTo10Miles == null
-                                            ? "—"
-                                            : `£${Number(c.fixedPriceUpTo10Miles).toFixed(2)}`}
+                                        label="Glasgow"
+                                        value={bandSummary(c, "GLA")}
                                     />
 
                                     <MobileInfoRow
@@ -528,59 +555,6 @@ export default function Cars() {
                                         />
                                     </div>
 
-                                    <div className="rounded-xl border border-gray-200 p-4 md:col-span-2">
-                                        <div className="mb-4">
-                                            <h3 className="font-semibold text-gray-900">
-                                                Fixed Short-Distance Fares
-                                            </h3>
-                                            <p className="mt-1 text-xs text-gray-500">
-                                                Applied per journey leg. Above 10 miles, the base price and city per-mile rate are used.
-                                            </p>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                            <div>
-                                                <label className="mb-1 block text-sm font-medium text-gray-700">
-                                                    Up to 5 miles
-                                                </label>
-                                                <input
-                                                    className="input-field"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    placeholder="£ fixed fare"
-                                                    value={form.fixedPriceUpTo5Miles ?? ""}
-                                                    onChange={(e) =>
-                                                        setForm((p) => ({
-                                                            ...p,
-                                                            fixedPriceUpTo5Miles: e.target.value,
-                                                        }))
-                                                    }
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="mb-1 block text-sm font-medium text-gray-700">
-                                                    Over 5 up to 10 miles
-                                                </label>
-                                                <input
-                                                    className="input-field"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    placeholder="£ fixed fare"
-                                                    value={form.fixedPriceUpTo10Miles ?? ""}
-                                                    onChange={(e) =>
-                                                        setForm((p) => ({
-                                                            ...p,
-                                                            fixedPriceUpTo10Miles: e.target.value,
-                                                        }))
-                                                    }
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:col-span-2">
                                         <input
                                             className="input-field"
@@ -615,49 +589,113 @@ export default function Cars() {
                                         />
                                     </div>
 
-                                    {/* City-wise Pricing */}
+                                    {/* Airport distance-band pricing */}
                                     <div className="rounded-xl border border-gray-200 p-4 md:col-span-2">
                                         <div className="mb-4">
                                             <h3 className="font-semibold text-gray-900">
-                                                Price Per Mile by City
+                                                Airport Distance Bands
                                             </h3>
 
                                             <p className="mt-1 text-xs text-gray-500">
-                                                Pricing is applied based on the pickup city.
+                                                The nearest airport is selected automatically. Fare per leg is base price + journey miles × the matching band rate.
                                             </p>
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                            {UK_CITIES.map((city) => (
-                                                <div key={city.placeId}>
-                                                    <label className="mb-1 block text-xs font-medium text-gray-600">
-                                                        {city.name} ({city.code})
-                                                    </label>
+                                        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                                            {AIRPORTS.map((airport) => (
+                                                <div
+                                                    key={airport.code}
+                                                    className="rounded-xl border border-gray-200 bg-gray-50 p-4"
+                                                >
+                                                    <div className="mb-3 flex items-center justify-between gap-3">
+                                                        <h4 className="font-semibold text-gray-900">
+                                                            {airport.name} ({airport.code})
+                                                        </h4>
+                                                        <button
+                                                            type="button"
+                                                            className="text-sm font-semibold text-primary-600 hover:underline"
+                                                            onClick={() => addBand(airport.code)}
+                                                        >
+                                                            + Add band
+                                                        </button>
+                                                    </div>
 
-                                                    <input
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0.01"
-                                                        className="input-field"
-                                                        placeholder="£ per mile"
-                                                        value={
-                                                            form.airportRates?.[city.code]
-                                                                ?.pricePerMile ?? ""
-                                                        }
-                                                        onChange={(e) =>
-                                                            setForm((p) => ({
-                                                                ...p,
-                                                                airportRates: {
-                                                                    ...(p.airportRates || {}),
-                                                                    [city.code]: {
-                                                                        pricePerMile:
-                                                                            e.target.value,
-                                                                    },
-                                                                },
-                                                            }))
-                                                        }
-                                                        required
-                                                    />
+                                                    <div className="space-y-3">
+                                                        {(form.airportPricing?.[airport.code]?.bands || []).map(
+                                                            (band, index, bands) => {
+                                                                const isUnlimited = index === bands.length - 1;
+                                                                const previousLimit = index === 0
+                                                                    ? 0
+                                                                    : bands[index - 1].upToMiles;
+
+                                                                return (
+                                                                    <div
+                                                                        key={`${airport.code}-${index}`}
+                                                                        className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+                                                                    >
+                                                                        <div>
+                                                                            <label className="mb-1 block text-xs font-medium text-gray-600">
+                                                                                Distance range
+                                                                            </label>
+                                                                            {isUnlimited ? (
+                                                                                <div className="input-field flex items-center bg-gray-50 text-sm text-gray-600">
+                                                                                    Over {previousLimit || 0} miles
+                                                                                </div>
+                                                                            ) : (
+                                                                                <input
+                                                                                    type="number"
+                                                                                    step="0.01"
+                                                                                    min={Number(previousLimit || 0) + 0.01}
+                                                                                    className="input-field"
+                                                                                    aria-label={`${airport.name} band upper miles`}
+                                                                                    value={band.upToMiles ?? ""}
+                                                                                    onChange={(e) =>
+                                                                                        updateBand(airport.code, index, {
+                                                                                            upToMiles: e.target.value,
+                                                                                        })
+                                                                                    }
+                                                                                    required
+                                                                                />
+                                                                            )}
+                                                                            {!isUnlimited && (
+                                                                                <p className="mt-1 text-[11px] text-gray-500">
+                                                                                    Over {previousLimit || 0} up to this many miles
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+
+                                                                        <div>
+                                                                            <label className="mb-1 block text-xs font-medium text-gray-600">
+                                                                                Price per mile (£)
+                                                                            </label>
+                                                                            <input
+                                                                                type="number"
+                                                                                step="0.01"
+                                                                                min="0.01"
+                                                                                className="input-field"
+                                                                                value={band.pricePerMile ?? ""}
+                                                                                onChange={(e) =>
+                                                                                    updateBand(airport.code, index, {
+                                                                                        pricePerMile: e.target.value,
+                                                                                    })
+                                                                                }
+                                                                                required
+                                                                            />
+                                                                        </div>
+
+                                                                        <button
+                                                                            type="button"
+                                                                            className="rounded-lg border border-red-200 px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                                                            disabled={bands.length === 1 || isUnlimited}
+                                                                            onClick={() => removeBand(airport.code, index)}
+                                                                        >
+                                                                            Remove
+                                                                        </button>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
