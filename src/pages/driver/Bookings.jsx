@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchMyBookings, completeBooking } from "../../api/driverBookings";
+import BookingInformation from "../../components/BookingInformation";
 
 const STATUS_STYLES = {
     ASSIGNED: "bg-blue-100 text-blue-700",
@@ -149,6 +150,8 @@ export default function DriverBookings() {
                                     Meet the passenger inside the airport arrivals terminal.
                                 </div>
                             )}
+
+                            <BookingInformation booking={b} />
 
                             {/* Completion */}
                             {b.status === "ASSIGNED" && (

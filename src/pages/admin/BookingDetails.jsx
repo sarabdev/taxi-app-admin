@@ -114,21 +114,28 @@ export default function BookingDetails() {
 
                 <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:gap-5">
                     <InfoItem
+                        label="Journey Type"
+                        value={booking.isReturnTrip ? "Return" : "One way"}
+                    />
+
+                    <InfoItem
                         label="Pickup"
                         value={booking.pickupLocation}
                     />
 
                     <InfoItem
-                        label="Dropoff"
+                        label="Destination"
                         value={booking.dropoffLocation}
                     />
 
                     <InfoItem
-                        label="Booked For (Pickup Date & Time)"
-                        value={formatDateTime(
-                            booking.pickupDate,
-                            booking.pickupTime
-                        )}
+                        label="Pickup Date"
+                        value={formatDate(booking.pickupDate)}
+                    />
+
+                    <InfoItem
+                        label="Pickup Time"
+                        value={booking.pickupTime}
                     />
 
                     <InfoItem
@@ -154,16 +161,18 @@ export default function BookingDetails() {
                             />
 
                             <InfoItem
-                                label="Return Dropoff"
+                                label="Return Destination"
                                 value={returnTrip.dropoffLocation}
                             />
 
                             <InfoItem
-                                label="Return Date & Time"
-                                value={formatDateTime(
-                                    returnTrip.pickupDate,
-                                    returnTrip.pickupTime
-                                )}
+                                label="Return Date"
+                                value={formatDate(returnTrip.pickupDate)}
+                            />
+
+                            <InfoItem
+                                label="Return Time"
+                                value={returnTrip.pickupTime}
                             />
                         </>
                     )}
@@ -182,6 +191,62 @@ export default function BookingDetails() {
                         value={booking.carId?.name || "—"}
                     />
 
+                    <InfoItem
+                        label="Car Type"
+                        value={formatCarType(booking.carId?.type)}
+                    />
+
+                </div>
+            </div>
+
+            <div className="card">
+                <h2 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">
+                    Customer &amp; Passengers
+                </h2>
+                <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                    <InfoItem label="Lead Passenger" value={booking.customerName} />
+                    <InfoItem label="Confirmation Email" value={booking.customerEmail} />
+                    <InfoItem label="Phone Number" value={booking.customerPhone} />
+                    <InfoItem label="Passengers" value={booking.passengers ?? 1} />
+                </div>
+            </div>
+
+            <div className="card">
+                <h2 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">
+                    Luggage
+                </h2>
+                <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                    <InfoItem label="Luggage" value={formatLuggageCount(booking.luggage)} />
+                    <InfoItem label="Large Bags (23kg)" value={booking.luggage?.largeBags23kg ?? 0} />
+                    <InfoItem label="Small Bags (15kg)" value={booking.luggage?.smallBags15kg ?? 0} />
+                    <InfoItem label="Shoulder Bags" value={booking.luggage?.shoulderBags ?? 0} />
+                    <InfoItem label="Extra-large Item" value={formatExtraItem(booking.luggage?.extraLargeItemType)} />
+                    <InfoItem label="Extra Item Note" value={booking.luggage?.extraLargeItemNote} />
+                </div>
+            </div>
+
+            <div className="card">
+                <h2 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">
+                    Flight Details
+                </h2>
+                <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                    <InfoItem label="Flight Number" value={booking.flight?.flightNumber} />
+                    <InfoItem label="Arriving From" value={booking.flight?.arrivingFrom} />
+                    <InfoItem label="Arrival Date & Time" value={formatStoredDateTime(booking.flight?.arrivalDateTime)} />
+                    <InfoItem label="Meet & Greet" value={booking.flight?.meetAndGreet ? "Selected" : "Not selected"} />
+                </div>
+            </div>
+
+            <div className="card">
+                <h2 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">
+                    Booking Record
+                </h2>
+                <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                    <InfoItem label="Booking Reference" value={String(booking._id || "").slice(-8).toUpperCase()} />
+                    <InfoItem label="Payment Reference" value={booking.paymentIntentId} />
+                    <InfoItem label="Status" value={booking.status} />
+                    <InfoItem label="Created At" value={formatStoredDateTime(booking.createdAt)} />
+                    <InfoItem label="Completed At" value={formatStoredDateTime(booking.completedAt)} />
                 </div>
             </div>
 
@@ -237,6 +302,11 @@ export default function BookingDetails() {
                         valueClassName="text-green-600"
                     />
 
+                    <FareRow
+                        label="Applied coupon"
+                        value={p.appliedCoupon || "None"}
+                    />
+
                     {booking.flight?.meetAndGreet && (
                         <FareRow
                             label="Meet & Greet service"
@@ -252,7 +322,7 @@ export default function BookingDetails() {
                     )}
 
                     <li className="flex items-center justify-between gap-4 border-t pt-3 font-bold">
-                        <span>Total:</span>
+                        <span>Total paid:</span>
                         <span className="text-right text-primary-600">
                             £{Number(p.totalFare || 0).toFixed(2)}
                         </span>
@@ -317,6 +387,8 @@ export default function BookingDetails() {
  * Reusable detail row/card item
  * ───────────────────────────── */
 function InfoItem({ label, value }) {
+    const displayedValue = value === 0 ? 0 : value || "—";
+
     return (
         <div className="min-w-0 rounded-lg border border-gray-100 bg-gray-50 p-3 sm:p-4">
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -324,7 +396,7 @@ function InfoItem({ label, value }) {
             </p>
 
             <p className="break-words text-sm leading-relaxed text-gray-800">
-                {value || "—"}
+                {displayedValue}
             </p>
         </div>
     );
@@ -333,14 +405,23 @@ function InfoItem({ label, value }) {
 /* ─────────────────────────────
  * Reusable fare row
  * ───────────────────────────── */
-function formatDateTime(date, time) {
-    if (date && time) {
-        return `${new Date(`${date}T${time}`).toLocaleDateString()} ${time}`;
-    }
+function formatDate(value) {
+    if (!value) return "—";
+    const parsed = new Date(`${value}T00:00:00`);
+    return Number.isNaN(parsed.getTime())
+        ? value
+        : new Intl.DateTimeFormat("en-GB", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        }).format(parsed);
+}
 
-    if (date) return date;
-
-    return "—";
+function formatLuggageCount(luggage = {}) {
+    const count = Number(luggage.largeBags23kg || 0)
+        + Number(luggage.smallBags15kg || 0)
+        + Number(luggage.shoulderBags || 0);
+    return `${count} ${count === 1 ? "item" : "items"}`;
 }
 
 function formatReceivedAt(value) {
@@ -351,6 +432,25 @@ function formatStoredDateTime(value) {
     if (!value) return "—";
 
     return new Date(value).toLocaleString();
+}
+
+function formatExtraItem(value) {
+    const labels = {
+        none: "None",
+        extra_large_bag_35kg: "Extra-large bag (35kg)",
+        wheelchair: "Wheelchair",
+        pram: "Pram",
+        golf_bag: "Golf bag",
+        other: "Other",
+    };
+
+    return labels[value] || value || "None";
+}
+
+function formatCarType(value) {
+    return value
+        ? String(value).replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
+        : "—";
 }
 
 function FareRow({ label, value, valueClassName = "text-gray-700" }) {
